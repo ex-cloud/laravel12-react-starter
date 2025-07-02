@@ -8,6 +8,8 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,15 +31,28 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $data = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Reset email verification jika email berubah
+        if ($user->email !== $data['email']) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        // Handle password update
+        if (!empty($data['password'])) {
+            if (!Hash::check($data['current_password'], $user->password)) {
+                return back()->withErrors(['current_password' => 'Password saat ini salah.']);
+            }
 
-        return to_route('profile.edit');
+            $user->password = bcrypt($data['password']);
+        }
+
+        unset($data['password'], $data['password_confirmation'], $data['current_password']);
+
+        $user->fill($data)->save();
+
+        return to_route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**

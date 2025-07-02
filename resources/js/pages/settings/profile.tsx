@@ -2,6 +2,7 @@ import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import AvatarForm from '@/components/AvatarForm';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -21,6 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type ProfileForm = {
     name: string;
+    username: string;
     email: string;
 };
 
@@ -29,6 +31,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
         name: auth.user.name,
+        username: auth.user.username || '',
         email: auth.user.email,
     });
 
@@ -47,8 +50,11 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
+                    <HeadingSmall title="Avatar" description="Upload or change your profile picture" />
+                    <AvatarForm />
 
                     <form onSubmit={submit} className="space-y-6">
+
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>
 
@@ -66,6 +72,24 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         </div>
 
                         <div className="grid gap-2">
+                            <Label htmlFor="username">Username</Label>
+
+                            <Input
+                                id="username"
+                                className="mt-1 block w-full"
+                                value={data.username}
+                                onChange={(e) => setData('username', e.target.value)}
+                                required
+                                autoComplete="username"
+                                placeholder="Username"
+                            />
+
+                            <InputError className="mt-2" message={errors.username} />
+                        </div>
+
+
+
+                        <div className="grid gap-2">
                             <Label htmlFor="email">Email address</Label>
 
                             <Input
@@ -75,7 +99,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
                                 required
-                                autoComplete="username"
+                                autoComplete="email"
                                 placeholder="Email address"
                             />
 
