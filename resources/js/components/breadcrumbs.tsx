@@ -5,7 +5,7 @@ import { Fragment } from 'react';
 
 export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[] }) {
     return (
-        <>
+        <div className="flex items-center gap-2 justify-between w-full">
             {breadcrumbs.length > 0 && (
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -29,6 +29,6 @@ export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[]
                     </BreadcrumbList>
                 </Breadcrumb>
             )}
-        </>
+        </div>
     );
 }

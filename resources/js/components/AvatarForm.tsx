@@ -1,7 +1,6 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import InputError from '@/components/input-error';
+import { Pencil } from 'lucide-react';
 
 
 export default function AvatarForm() {
@@ -24,29 +23,37 @@ export default function AvatarForm() {
     };
 
     return (
-        <form onSubmit={submit} className="space-y-4">
-            {avatar ? (
-                <img
-                    src={avatar}
-                    alt="Current avatar"
-                    className="h-24 w-24 rounded-full object-cover border"
-                />
-            ) : (
-                <div className="h-24 w-24 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
-                    No avatar
-                </div>
-            )}
-
-            <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setData('avatar', e.target.files?.[0] || null)}
+        <form onSubmit={submit} className="flex flex-col items-center gap-4">
+        <div className="relative w-28 h-28">
+            <img
+                src={avatar}
+                alt="Current avatar"
+                className="w-full h-full rounded-md object-cover border"
             />
-            <InputError message={errors.avatar} />
 
-            <Button type="submit" disabled={processing}>
-                Upload Avatar
-            </Button>
-        </form>
+            {/* Overlay Upload Button */}
+            <label
+                htmlFor="avatar-upload"
+                className="absolute top-14 right-10 border border-white/10 bg-gray-500/5 text-white text-xs px-2 py-1 rounded backdrop-blur-lg cursor-pointer transition-all hover:bg-gray-500/10 hover:border-white/20 flex items-center justify-center"
+            >
+                <Pencil size={13} className="text-white/60" />
+                <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setData('avatar', e.target.files?.[0] || null)}
+                />
+            </label>
+        </div>
+
+        {errors.avatar && (
+            <p className="text-red-500 text-sm">{errors.avatar}</p>
+        )}
+
+        <Button type="submit" disabled={processing} variant={'outline'} size={'sm'}>
+            Upload
+        </Button>
+    </form>
     );
 }

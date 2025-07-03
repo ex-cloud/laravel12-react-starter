@@ -8,7 +8,7 @@ import { type PropsWithChildren } from 'react';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'My Profile',
         href: '/settings/profile',
         icon: null,
     },
@@ -36,8 +36,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
         <div className="px-4 py-6">
             <Heading title="Settings" description="Manage your profile and account settings" />
 
-            <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
+            <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-8">
+                <aside className="w-full max-w-xl lg:w-48 border p-4 rounded-md ">
                     <nav className="flex flex-col space-y-1 space-x-0">
                         {sidebarNavItems.map((item, index) => (
                             <Button
