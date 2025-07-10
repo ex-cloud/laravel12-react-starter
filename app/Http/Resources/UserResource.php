@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Str;
 
 final class UserResource extends JsonResource
 {
@@ -15,8 +16,12 @@ final class UserResource extends JsonResource
             'name'       => $this->name,
             'username'   => $this->username,
             'email'      => $this->email,
-            'avatar'     => $this->avatar,
-            'created_at' => $this->created_at->toDateTimeString(),
+            'avatar'     => $this->avatar
+                ? asset(Str::startsWith($this->avatar, 'avatars/')
+                    ? 'storage/' . $this->avatar
+                    : $this->avatar)
+                : asset('assets/default.jpg'),
+            'created_at' => $this->created_at?->format('j F Y') ?? null,
         ];
     }
 }

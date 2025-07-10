@@ -3,16 +3,22 @@
     "singleQuote": true,
     "singleAttributePerLine": false,
     "htmlWhitespaceSensitivity": "css",
-    "printWidth": 150,
+    "printWidth": 80,
+    "tabWidth": 2,
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "useTabs": false,
+    "arrowParens": "always",
+    "endOfLine": "lf",
     "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-tailwindcss"],
     "tailwindFunctions": ["clsx", "cn"],
     "tailwindStylesheet": "resources/css/app.css",
-    "tabWidth": 4,
     "overrides": [
         {
-            "files": "**/*.yml",
+            "files": "**/*.html",
             "options": {
-                "tabWidth": 2
+                "bracketSameLine": true,
+                "singleAttributePerLine": false
             }
         }
     ]

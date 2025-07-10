@@ -52,7 +52,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     {/* <HeadingSmall title="My Profile"/> */}
                     <div className='border p-4 rounded-md space-y-4'>
                         <HeadingSmall title="Avatar" description="Upload or change your profile picture" />
-                        <div className='flex  space-x-3'>
+                        <div className='flex space-x-3'>
                             <AvatarForm />
                             <div className=''>
                                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{auth.user.name}</h2>

@@ -1,5 +1,7 @@
+import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
+// import AppearanceToggleTab from '@/components/appearance-tabs';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
@@ -36,6 +38,8 @@ export default function Welcome() {
                                 </Link>
                             </>
                         )}
+                        <AppearanceToggleDropdown />
+                        {/* <AppearanceToggleTab /> */}
                     </nav>
                 </header>
                 <div className="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">

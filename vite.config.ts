@@ -14,6 +14,19 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    build: {
+        chunkSizeWarningLimit: 1024, // 1 MB
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Group berdasarkan kategori atau package
+              react: ['react', 'react-dom'],
+              inertia: ['@inertiajs/react'],
+              shadcn: ['@radix-ui/react-dropdown-menu', 'lucide-react'],
+            },
+          },
+        },
+      },
     esbuild: {
         jsx: 'automatic',
     },

@@ -6,15 +6,15 @@ import { HTMLAttributes } from 'react';
 export default function AppearanceToggleTab({ className = '', ...props }: HTMLAttributes<HTMLDivElement>) {
     const { appearance, updateAppearance } = useAppearance();
 
-    const tabs: { value: Appearance; icon: LucideIcon; label: string }[] = [
-        { value: 'light', icon: Sun, label: 'Light' },
-        { value: 'dark', icon: Moon, label: 'Dark' },
-        { value: 'system', icon: Monitor, label: 'System' },
+    const tabs: { value: Appearance; icon: LucideIcon; label: string; className: string }[] = [
+        { value: 'light', icon: Sun, label: 'Light', className: 'text-amber-400' },
+        { value: 'dark', icon: Moon, label: 'Dark', className: 'text-gray-400' },
+        { value: 'system', icon: Monitor, label: 'System', className: 'text-sky-400' },
     ];
 
     return (
         <div className={cn('inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800', className)} {...props}>
-            {tabs.map(({ value, icon: Icon, label }) => (
+            {tabs.map(({ value, icon: Icon, label, className: iconColor }) => (
                 <button
                     key={value}
                     onClick={() => updateAppearance(value)}
@@ -25,7 +25,7 @@ export default function AppearanceToggleTab({ className = '', ...props }: HTMLAt
                             : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
                     )}
                 >
-                    <Icon className="-ml-1 h-4 w-4" />
+                    <Icon className={cn('-ml-1 h-4 w-4', iconColor)} />
                     <span className="ml-1.5 text-sm">{label}</span>
                 </button>
             ))}
