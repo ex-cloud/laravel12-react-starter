@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { ArrowUpRight, BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Folder, LayoutGrid, List, Tag } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -17,6 +17,16 @@ const mainNavItems: NavItem[] = [
         title: 'Users',
         href: '/users',
         icon: Folder,
+    },
+    {
+        title: 'Tags',
+        href: '/admin/tags',
+        icon: Tag,
+    },
+    {
+        title: 'Menus',
+        href: '/admin/menus/builder',
+        icon: List,
     },
 ];
 

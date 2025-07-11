@@ -19,7 +19,7 @@ final class TagFactory extends Factory
         return [
             "id" => $this->faker->uuid,
             "name"=> $this->faker->name,
-            "slug"=> $this->faker->unique()->slug,
+            'slug' => fn() => \Str::slug($this->faker->unique()->words(2, true) . '-' . uniqid()),
         ];
     }
 }

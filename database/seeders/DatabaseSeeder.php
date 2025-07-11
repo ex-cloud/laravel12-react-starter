@@ -7,8 +7,6 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-use function Illuminate\Log\log;
-
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
@@ -23,10 +21,11 @@ class DatabaseSeeder extends Seeder
             'avatar' => '/assets/default.jpg',
         ]);
 
-        log()->info('test');
-
         $this->call([
             TagSeeder::class,
+            CategorySeeder::class,
+            ArticleSeeder::class,
+            MenuSeeder::class
         ]);
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Menu extends Model
 {
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['title', 'slug'];
 
     public function items(): HasMany
     {

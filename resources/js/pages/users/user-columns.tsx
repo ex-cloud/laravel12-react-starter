@@ -41,6 +41,10 @@ export const userColumns = (
     enableSorting: false,
     enableHiding: false,
   },
+//   {
+//     header: '#',
+//     cell: ({ row }) => row.index + 1,
+//   },
   {
     accessorKey: "avatar",
     header: "Avatar",

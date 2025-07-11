@@ -61,8 +61,10 @@ export default function Users({ users }: { users: { data: User[] } }) {
           </Link>
         </div>
         <DataTable
-          columns={userColumns(setSelectedUser, setDialogMode, setOpenDialog)}
-          data={users.data}
+            columns={userColumns(setSelectedUser, setDialogMode, setOpenDialog)}
+            data={users.data}
+            filterColumn="email"
+            placeholder="Cari email user..."
         />
       </div>
 
