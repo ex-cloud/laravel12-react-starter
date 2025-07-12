@@ -10,6 +10,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -86,6 +87,12 @@ final class UserController extends Controller
     public function update(UserUpdateRequest $request, User $user)
     {
         $validated = $request->validated();
+        Log::info('Is multipart?', ['isMultipart' => $request->isMethod('put') && $request->has('name')]);
+        Log::info('All input:', $request->all());
+        Log::info('Validated:', $validated);
+
+
+        Log::info('Validated data:', $validated);
 
         // Jika ada file avatar baru diupload
         if ($request->hasFile('avatar')) {
@@ -93,21 +100,32 @@ final class UserController extends Controller
             if (
                 $user->avatar &&
                 Storage::disk('public')->exists($user->avatar) &&
-                $user->avatar !== 'avatars/default.jpg' // pastikan ini sesuai nama file default kamu
+                $user->avatar !== 'avatars/default.jpg'
             ) {
                 Storage::disk('public')->delete($user->avatar);
             }
 
             // Upload avatar baru dan simpan path-nya
             $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        } else {
+            // ⛔️ Hapus field avatar jika hanya dikirim URL string
+            unset($validated['avatar']);
+        }
+        if ($request->boolean('reset_avatar')) {
+            if (
+                $user->avatar &&
+                Storage::disk('public')->exists($user->avatar) &&
+                $user->avatar !== 'avatars/default.jpg'
+            ) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            $validated['avatar'] = null;
         }
 
-        // Update user dengan semua data tervalidasi (termasuk avatar jika ada)
         $user->update($validated);
-
-        return redirect()->route('users.index')->with([
-            'success' => 'User berhasil diperbarui.',
-        ]);
+        // dd($request->all(), $request->file('avatar'), $request->hasFile('avatar'));
+        return back(303)->with('success', 'User berhasil diperbarui.');
     }
 
     /**

@@ -1,29 +1,19 @@
-// user-columns.ts
+import { ColumnDef } from "@tanstack/react-table"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown, MoreHorizontal } from "lucide-react"
-import { ColumnDef } from "@tanstack/react-table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent,
+  AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogCancel, AlertDialogAction
+} from "@/components/ui/alert-dialog"
 import type { User } from "@/types"
 import { router } from "@inertiajs/react"
-import {
-    AlertDialog,
-    AlertDialogTrigger,
-    AlertDialogContent,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogCancel,
-    AlertDialogAction,
-  } from "@/components/ui/alert-dialog"
 
-
-export const userColumns = (
-  setSelectedUser: (user: User) => void,
-  setDrawerMode: (mode: "view" | "edit") => void,
-  setOpenDrawer: (open: boolean) => void,
-): ColumnDef<User>[] => [
+export const userColumns = (): ColumnDef<User>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -41,10 +31,6 @@ export const userColumns = (
     enableSorting: false,
     enableHiding: false,
   },
-//   {
-//     header: '#',
-//     cell: ({ row }) => row.index + 1,
-//   },
   {
     accessorKey: "avatar",
     header: "Avatar",
@@ -82,13 +68,8 @@ export const userColumns = (
     accessorKey: "created_at",
     header: "Created At",
     cell: ({ row }) => {
-      const dateString = row.getValue("created_at") as string
-      const date = new Date(dateString)
-      return date.toLocaleDateString("id-ID", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      const date = new Date(row.getValue("created_at"))
+      return date.toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" })
     },
   },
   {
@@ -108,52 +89,39 @@ export const userColumns = (
               Copy user ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                setSelectedUser(user)
-                setDrawerMode("view")
-                setOpenDrawer(true)
-              }}
-            >
+            <DropdownMenuItem onClick={() => {
+                console.log("Trigger View:", user)
+              const event = new CustomEvent("user:view", { detail: user })
+              window.dispatchEvent(event)
+            }}>
               View
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setSelectedUser(user)
-                setDrawerMode("edit")
-                setOpenDrawer(true)
-              }}
-            >
+            <DropdownMenuItem onClick={() => {
+              const event = new CustomEvent("user:edit", { detail: user })
+              window.dispatchEvent(event)
+            }}>
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button variant="ghost"
-                        className="w-full justify-start">
-                        Hapus
-                    </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Pengguna?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        Apakah kamu yakin ingin menghapus <strong>{user.name}</strong>? Tindakan ini tidak bisa dibatalkan.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                        className="bg-rose-600 hover:bg-rose-700 text-white"
-                        onClick={() => {
-                            router.delete(`/users/${user.id}`)
-                        }}
-                        >
-                        Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-start">Hapus</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Pengguna?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Apakah kamu yakin ingin menghapus <strong>{user.name}</strong>? Tindakan ini tidak bisa dibatalkan.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction className="bg-rose-600 hover:bg-rose-700 text-white" onClick={() => router.delete(`/users/${user.id}`)}>
+                      Hapus
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
