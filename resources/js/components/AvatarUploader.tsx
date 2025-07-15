@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { AlertCircleIcon, ImageIcon, UploadIcon, XIcon } from "lucide-react"
 import { useFileUpload } from "@/hooks/use-file-upload"
 import { Button } from "@/components/ui/button"
@@ -30,19 +30,16 @@ export default function AvatarUploader({
   ] = useFileUpload({
     accept: "image/svg+xml,image/png,image/jpeg,image/jpg,image/gif",
     maxSize,
+    multiple: false,
   })
-
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const previewUrl = files[0]?.preview || null
 
   // Update parent when file changes
   useEffect(() => {
     const file = files.length > 0 ? files[0]?.file : null
-    if (file && file instanceof File) {
+    if (file instanceof File) {
       onFileChange(file)
-    } else {
-      onFileChange(null)
     }
   }, [files, onFileChange])
 
@@ -57,13 +54,15 @@ export default function AvatarUploader({
           data-dragging={isDragging || undefined}
           className="border-input data-[dragging=true]:bg-accent/50 relative flex min-h-52 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors"
         >
+          {/* Hidden input untuk upload */}
           <input
-            {...getInputProps()}
-            ref={inputRef} // Apply the `inputRef` here
-            className="sr-only"
-            aria-label="Upload image file"
+            {...getInputProps({
+              className: "sr-only",
+              "aria-label": "Upload image file",
+            })}
           />
 
+          {/* Preview jika sudah ada file */}
           {previewUrl ? (
             <div className="absolute inset-0 flex items-center justify-center p-4">
               <img
@@ -82,6 +81,7 @@ export default function AvatarUploader({
                 SVG, PNG, JPG or GIF (max. {maxSizeMB}MB)
               </p>
               <Button
+                type="button" // ⬅️ penting
                 variant="outline"
                 className="mt-4"
                 onClick={openFileDialog}
@@ -93,10 +93,11 @@ export default function AvatarUploader({
           )}
         </div>
 
+        {/* Tombol remove */}
         {previewUrl && (
           <div className="absolute top-4 right-4">
             <button
-              type="button"
+              type="button" // ⬅️ penting
               className="z-50 flex size-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
               onClick={() => {
                 removeFile(files[0]?.id)
@@ -110,8 +111,12 @@ export default function AvatarUploader({
         )}
       </div>
 
+      {/* Tampilkan error */}
       {errors.length > 0 && (
-        <div className="text-destructive flex items-center gap-1 text-xs" role="alert">
+        <div
+          className="text-destructive flex items-center gap-1 text-xs"
+          role="alert"
+        >
           <AlertCircleIcon className="size-3 shrink-0" />
           <span>{errors[0]}</span>
         </div>

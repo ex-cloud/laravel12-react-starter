@@ -13,8 +13,7 @@ import { useUserDialogListener } from '@/hooks/use-user-dialog-listener'
 import { EditSheet } from '@/components/EditSheet'
 import { ExtractFormFields } from '@/types/utils'
 import { userFields, userToFormData } from './user-fields'
-import { Label } from '@/components/ui/label'
-import { Switch } from "@/components/ui/switch"
+import AvatarUploader from '@/components/AvatarUploader'
 
 export type UserForm = ExtractFormFields<User>
 
@@ -24,6 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Users({ users }: { users: { data: User[] } }) {
   const { flash } = usePage().props as { flash?: { success?: string; error?: string; info?: string } }
+  const [newAvatar, setNewAvatar] = useState<File | null>(null)
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [dialogMode, setDialogMode] = useState<"view" | "edit" | null>(null)
@@ -37,8 +37,13 @@ export default function Users({ users }: { users: { data: User[] } }) {
     setSelectedUser(null)
     setDialogMode(null)
     setResetAvatar(false)
+    setNewAvatar(null)
   }
+
+
+
   const [resetAvatar, setResetAvatar] = useState(false)
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="List Users" />
@@ -69,6 +74,26 @@ export default function Users({ users }: { users: { data: User[] } }) {
 
       {/* Edit Sheet */}
       <EditSheet<UserForm>
+        beforeFields={
+            selectedUser?.avatar && (
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Current Avatar</p>
+                  <img
+                    src={selectedUser.avatar}
+                    alt="Current Avatar"
+                    className="w-16 h-16 rounded-md object-cover"
+                  />
+                </div>
+                <AvatarUploader
+                  maxSizeMB={2}
+                  onFileChange={(file) => {
+                    setNewAvatar(file)
+                  }}
+                />
+              </div>
+            )
+          }
         title="Edit User"
         description="Ubah user yang dipilih. Klik simpan setelah selesai."
         open={dialogMode === "edit" && openDialog && selectedUser !== null}
@@ -77,30 +102,15 @@ export default function Users({ users }: { users: { data: User[] } }) {
         actionUrl={selectedUser ? route('users.update', selectedUser.id) : "#"}
         method="put"
         fields={userFields}
-        extraContent={
-            selectedUser?.avatar && (
-              <div className="space-y-2">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Current Avatar</p>
-                  <img
-                    src={selectedUser.avatar}
-                    alt="Current Avatar"
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                </div>
+        beforeSubmit={(formData) => {
+            if (newAvatar) {
+              formData.set("avatar", newAvatar)
+            }
 
-                <div className="flex items-center justify-between mt-1">
-                    <Label htmlFor="reset_avatar">Reset avatar ke default</Label>
-                    <Switch
-                        id="reset_avatar"
-                        checked={resetAvatar}
-                        onCheckedChange={setResetAvatar}
-                        className="data-[state=checked]:bg-primary"
-                    />
-                </div>
-              </div>
-            )
-          }
+            if (resetAvatar) {
+              formData.set("reset_avatar", "1")
+            }
+          }}
       />
     </AppLayout>
   )
