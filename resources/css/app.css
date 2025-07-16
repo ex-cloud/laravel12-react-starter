@@ -173,3 +173,8 @@
         @apply px-4 mx-auto 2xl:max-w-screen-xl items-center;
     }
 }
+
+/* contoh di resources/css/app.css */
+[data-state="selected"] {
+  background-color: rgba(59, 130, 246, 0.1);
+}

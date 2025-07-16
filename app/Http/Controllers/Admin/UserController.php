@@ -19,18 +19,30 @@ final class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('users/users', [
+        $query = User::query();
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        return Inertia::render('Admin/Users/Index', [
             'users' => [
-                'data' => UserResource::collection(User::latest()->get())->toArray(request()),
+                'data' => UserResource::collection(
+                    $query->get()
+                )->toArray($request),
             ],
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('users/create');
+        return Inertia::render('Admin/Users/Create');
     }
 
     /**
@@ -55,7 +67,7 @@ final class UserController extends Controller
             'avatar' => $avatarPath, // bisa null, nanti default di-handle di resource
         ]);
 
-        return redirect()->route('users.index')->with([
+        return redirect()->route('admin.users.index')->with([
             'info' => 'Data sedang diproses.',
             'success' => 'User berhasil ditambahkan.',
         ]);
@@ -66,7 +78,7 @@ final class UserController extends Controller
      */
     public function show(User $user)
     {
-        return Inertia::render('users/show', [
+        return Inertia::render('Admin/Users/Show', [
             'user' => (new UserResource($user))->resolve(),
         ]);
     }
@@ -76,7 +88,7 @@ final class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return Inertia::render('users/edit', [
+        return Inertia::render('Admin/Users/Edit', [
             'user' => (new UserResource($user))->resolve()
         ]);
     }
@@ -144,7 +156,7 @@ final class UserController extends Controller
 
         $user->delete();
 
-        return redirect()->route('users.index')->with([
+        return redirect()->route('admin.users.index')->with([
             'success' => 'User berhasil dihapus.',
         ]);
     }

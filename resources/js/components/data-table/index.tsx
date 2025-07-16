@@ -22,8 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { DataTableViewOptions } from "./DataTableViewOptions"
 import { DataTablePagination } from "./DataTablePagination"
+import { TableContext } from "./TableContext"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -32,6 +32,7 @@ interface DataTableProps<TData, TValue> {
   enableInternalFilter?: boolean
   enablePagination?: boolean
   onRowSelectionChange?: (selectedRows: TData[]) => void
+  headerContent?: React.ReactNode // ⬅️ ini tambahan
 }
 
 export function DataTable<TData, TValue>({
@@ -41,6 +42,7 @@ export function DataTable<TData, TValue>({
   enableInternalFilter = true,
   enablePagination = true,
   onRowSelectionChange,
+  headerContent,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -72,25 +74,31 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      {enableInternalFilter && (
-        <div className="flex items-center py-4 gap-4 flex-wrap">
-          {filterableColumns.map((col) => (
-            table.getColumn(col) && (
-              <Input
-                key={col}
-                placeholder={`Filter ${col}...`}
-                value={(table.getColumn(col)?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn(col)?.setFilterValue(event.target.value)
-                }
-                className="max-w-sm"
-              />
-            )
-          ))}
-          <DataTableViewOptions table={table} />
+      <TableContext.Provider value={table}>
+        <div>
+            {enableInternalFilter && (
+                <div className="flex flex-wrap justify-between items-start py-4 gap-4">
+                <div className="flex flex-wrap gap-2">
+                    {filterableColumns.map((col) =>
+                    table.getColumn(col) ? (
+                        <Input
+                        key={col}
+                        placeholder={`Filter ${col}...`}
+                        value={(table.getColumn(col)?.getFilterValue() as string) ?? ""}
+                        onChange={(event) =>
+                            table.getColumn(col)?.setFilterValue(event.target.value)
+                        }
+                        className="max-w-sm"
+                        />
+                    ) : null
+                    )}
+                </div>
+                {headerContent && <div className="flex gap-2">{headerContent}</div>}
+                </div>
+            )}
         </div>
-      )}
-
+    </TableContext.Provider>
+    
       <div className="overflow-hidden rounded-lg border">
         <Table>
           <TableHeader className="dark:bg-zinc-900 sticky top-0 z-10">
@@ -110,7 +118,7 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
