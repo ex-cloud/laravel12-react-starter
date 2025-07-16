@@ -96,7 +96,7 @@ useEffect(() => {
                     />
                 </div>
                 <DataTableViewOptions />
-                <Link href="/users/create">
+                <Link href="/admin/users/create">
                     <Button type="button" variant="default">+ Add user</Button>
                 </Link>
                 </>

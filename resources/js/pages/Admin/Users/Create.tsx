@@ -12,8 +12,8 @@ import { useState } from "react"
 import HeadingSmall from "@/components/heading-small"
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: "List User", href: "/users" },
-  { title: "Create User", href: "/users/create" },
+//   { title: "List User", href: "/admin/users" },
+  { title: "Create User", href: "/admin/users/create" },
 ]
 
 type CreateUserForm = {
@@ -39,7 +39,7 @@ export default function CreateUser() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    post("/users", { forceFormData: true })
+    post("/admin/users", { forceFormData: true })
   }
 
   return (
