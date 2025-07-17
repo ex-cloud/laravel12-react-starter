@@ -123,7 +123,7 @@ export default function TagIndex({ tags }: TagProps) {
                 <AlertDialogHeader>
                 <AlertDialogTitle>Hapus Tag?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Apakah kamu yakin ingin menghapus <strong>{selectedTag?.name}</strong>? Tindakan ini tidak dapat dibatalkan.
+                    Apakah kamu yakin ingin menghapus Tag <strong>{selectedTag?.name}</strong>? Tindakan ini tidak dapat dibatalkan.
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

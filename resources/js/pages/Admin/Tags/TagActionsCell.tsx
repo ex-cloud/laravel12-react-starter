@@ -49,7 +49,7 @@ export function TagActionsCell({ tag }: { tag: Tag }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Hapus Tag?</AlertDialogTitle>
               <AlertDialogDescription>
-                Yakin ingin menghapus <strong>{tag.name}</strong>? Tindakan ini tidak bisa dibatalkan.
+                Yakin ingin menghapus Tag <strong>{tag.name}</strong>? Tindakan ini tidak bisa dibatalkan.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

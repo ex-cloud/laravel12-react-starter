@@ -44,15 +44,21 @@ export const userColumns = (search: string = ""): ColumnDef<User>[] => [
       )
     },
   },
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Name <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => highlightSearch(safe(row.original.name), search),
-  },
+    {
+        accessorKey: "name",
+        header: ({ column }) => (
+            <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+        ),
+        cell: ({ row }) => highlightSearch(safe(row.original.name), search),
+        enableSorting: true,
+        sortingFn: (rowA, rowB, columnId) => {
+            const a = (rowA.getValue(columnId) as string || "").toLowerCase()
+            const b = (rowB.getValue(columnId) as string || "").toLowerCase()
+            return a.localeCompare(b, 'id') // pakai locale 'id' untuk urutan Indonesia
+        },
+    },
   {
     accessorKey: "username",
     header: "Username",

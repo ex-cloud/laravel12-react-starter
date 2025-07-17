@@ -13,10 +13,11 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { router, useForm } from "@inertiajs/react"
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { FormEvent, ReactNode } from "react"
 import type { FormDataConvertible } from "@/types/utils"
 import { safeSetFormData } from "@/types/utils"
+import { slugify } from "@/lib/slugify"
 
 type SafeFieldName<T> = keyof T & string
 
@@ -55,14 +56,14 @@ export function EditSheet<T extends Record<string, FormDataConvertible>>({
   beforeSubmit,
   beforeFields,
 }: EditSheetProps<T>) {
-  const { data, setData, errors, processing, reset } = useForm<Partial<T>>(initialData || {})
-
-  const setField = useCallback(
+    const { data, setData, errors, processing, reset } = useForm<Partial<T>>(initialData || {})
+    const [isSlugEdited, setIsSlugEdited] = useState(false)
+    const setField = useCallback(
     (key: keyof T, value: FormDataConvertible) => {
-      setData((prev) => ({ ...prev, [key]: value }))
+        setData((prev) => ({ ...prev, [key]: value }))
     },
     [setData]
-  )
+    )
 
   useEffect(() => {
     if (!open || !initialData) {
@@ -142,14 +143,28 @@ export function EditSheet<T extends Record<string, FormDataConvertible>>({
                       id={field.name}
                       type={field.type ?? "text"}
                       placeholder={field.placeholder}
-                      disabled={field.disabled}
+                      disabled={field.disabled || field.name === "slug"}
                       value={String(data[field.name] ?? "")}
                       onChange={(e) => {
                         let value: FormDataConvertible = e.target.value
+
                         if (field.type === "number") value = Number(value)
                         else if (field.type === "date") value = new Date(value)
-                        safeSetFormData(setField, field.name, value)
-                      }}
+
+                        // Auto-slugify jika field name
+                        if (field.name === "name") {
+                            safeSetFormData(setField, "name" as SafeFieldName<T>, value)
+                            if (!isSlugEdited) {
+                            const generatedSlug = slugify(String(value))
+                            safeSetFormData(setField, "slug" as SafeFieldName<T>, generatedSlug)
+                            }
+                        } else if (field.name === "slug") {
+                            setIsSlugEdited(true) // user menyentuh slug => jangan override lagi
+                            safeSetFormData(setField, "slug" as SafeFieldName<T>, value)
+                        } else {
+                            safeSetFormData(setField, field.name, value)
+                        }
+                    }}
                     />
                     {fieldError && <p className="text-sm text-red-500">{fieldError}</p>}
                   </div>

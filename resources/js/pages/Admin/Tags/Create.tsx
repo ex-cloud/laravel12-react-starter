@@ -7,6 +7,8 @@ import AppLayout from "@/layouts/app-layout"
 import { Head, useForm } from "@inertiajs/react"
 import { BreadcrumbItem } from "@/types"
 import HeadingSmall from "@/components/heading-small"
+import { slugify } from "@/lib/slugify"
+import { useState } from "react"
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: "Create Tag", href: "/admin/tags/create" },
@@ -29,6 +31,20 @@ export default function CreateTag() {
     post("/admin/tags", { forceFormData: true })
   }
 
+  const [isSlugEdited, setIsSlugEdited] = useState(false)
+
+    const handleNameChange = (value: string) => {
+    setData("name", value)
+    if (!isSlugEdited) {
+        setData("slug", slugify(value))
+    }
+    }
+
+    const handleSlugChange = (value: string) => {
+    setIsSlugEdited(true)
+    setData("slug", value)
+    }
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Create Tag"/>
@@ -42,7 +58,7 @@ export default function CreateTag() {
                 <Input
                   id="name"
                   value={data.name}
-                  onChange={(e) => setData("name", e.target.value)}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="Enter name"
                 />
                 {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
@@ -50,10 +66,11 @@ export default function CreateTag() {
               <div>
                 <Label htmlFor="username">Slug</Label>
                 <Input
-                  id="slug"
-                  value={data.slug}
-                  onChange={(e) => setData("slug", e.target.value)}
-                  placeholder="Enter slug"
+                    disabled={true}
+                    id="slug"
+                    value={data.slug}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                    placeholder="Enter slug"
                 />
                 {errors.slug && <p className="text-sm text-red-500">{errors.slug}</p>}
               </div>

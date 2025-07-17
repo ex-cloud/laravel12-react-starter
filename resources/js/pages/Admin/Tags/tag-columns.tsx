@@ -10,13 +10,13 @@ const safe = (text?: string | null): string => text ?? ""
 
 export const tagColumns = (search: string = ""): ColumnDef<Tag>[] => [
     {
-        id: "select",
+    id: "select",
     header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
+        <Checkbox
+            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        />
+        ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
@@ -31,15 +31,21 @@ export const tagColumns = (search: string = ""): ColumnDef<Tag>[] => [
 //     header: '#',
 //     cell: ({ row }) => row.index + 1,
 //   },
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Name <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => highlightSearch(safe(row.original.name), search),
-  },
+    {
+        accessorKey: "name",
+        header: ({ column }) => (
+            <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+        ),
+        cell: ({ row }) => highlightSearch(safe(row.original.name), search),
+        enableSorting: true,
+        sortingFn: (rowA, rowB, columnId) => {
+            const a = (rowA.getValue(columnId) as string || "").toLowerCase()
+            const b = (rowB.getValue(columnId) as string || "").toLowerCase()
+            return a.localeCompare(b, 'id') // pakai locale 'id' untuk urutan Indonesia
+        },
+    },
   {
     accessorKey: 'slug',
     header: 'Slug',
@@ -48,11 +54,13 @@ export const tagColumns = (search: string = ""): ColumnDef<Tag>[] => [
   {
     accessorKey: "created_at",
     header: "Created At",
+    enableSorting: true,
+    sortingFn: "datetime", // built-in sorting function
     cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"))
-      return date.toLocaleDateString("id-ID", {
+        const date = new Date(row.getValue("created_at"))
+        return date.toLocaleDateString("id-ID", {
         year: "numeric", month: "long", day: "numeric"
-      })
+        })
     },
   },
   {

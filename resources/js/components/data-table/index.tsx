@@ -13,6 +13,12 @@ import {
   ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -24,6 +30,8 @@ import {
 } from "@/components/ui/table"
 import { DataTablePagination } from "./DataTablePagination"
 import { TableContext } from "./TableContext"
+import { Trash } from "lucide-react" // opsional untuk ikon
+import { Button } from "../ui/button"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -44,7 +52,9 @@ export function DataTable<TData, TValue>({
   onRowSelectionChange,
   headerContent,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([
+  { id: "name", desc: false }, // ✅ default sort by name ascending (A-Z)
+])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = React.useState({})
 
@@ -76,6 +86,28 @@ export function DataTable<TData, TValue>({
     <div>
       <TableContext.Provider value={table}>
         <div>
+            {/* ✅ Kondisi Bulk Actions */}
+        {table.getFilteredSelectedRowModel().rows.length > 0 && (
+        <div className="flex gap-2">
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">Bulk actions</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem
+                    onClick={() => {
+                        const selected = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
+                        console.log("Delete selected items:", selected)
+                        // TODO: trigger delete action atau modal konfirmasi
+                    }}
+                    className="text-red-600 focus:text-red-700"
+                    >
+                    <Trash className="mr-2 h-4 w-4" /> Delete selected
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        )}
             {enableInternalFilter && (
                 <div className="flex flex-wrap justify-between items-start py-4 gap-4">
                 <div className="flex flex-wrap gap-2">
@@ -98,7 +130,7 @@ export function DataTable<TData, TValue>({
             )}
         </div>
     </TableContext.Provider>
-    
+
       <div className="overflow-hidden rounded-lg border">
         <Table>
           <TableHeader className="dark:bg-zinc-900 sticky top-0 z-10">
