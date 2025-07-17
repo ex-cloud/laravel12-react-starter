@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TagResource;
 use App\Models\Tag;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,16 +15,21 @@ class TagController extends Controller
 {
     public function index(Request $request): Response
     {
-        $filters = $request->only(['name']);
+        $query = Tag::query();
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
 
         return Inertia::render('Admin/Tags/Index', [
-            'tags' => TagResource::collection(
-                Tag::query()
-                    ->when($request->name, fn($query) => $query->where('name', 'like', "%{$request->name}%"))
-                    ->latest()
-                    ->get()
-            )->toArray($request),
-            'filters' => $filters,
+            'tags' => [
+                'data' => TagResource::collection(
+                    $query->get()
+                )->toArray($request),
+            ],
         ]);
     }
 
@@ -45,11 +49,17 @@ class TagController extends Controller
         return redirect()->route('admin.tags.index')
             ->with('success', 'Tag berhasil ditambahkan.');
     }
+    public function show(Tag $tag)
+    {
+        return Inertia::render('Admin/Tags/Show', [
+            'tag' => (new TagResource($tag))->resolve(),
+        ]);
+    }
 
     public function edit(Tag $tag): Response
     {
         return Inertia::render('Admin/Tags/Edit', [
-            'tag' => $tag,
+            'tag' => (new TagResource($tag))->resolve()
         ]);
     }
 
@@ -61,15 +71,15 @@ class TagController extends Controller
 
         $tag->update($validated);
 
-        return redirect()->route('admin.tags.index')
-            ->with('success', 'Tag berhasil diperbarui.');
+        return back(303)->with('success', 'Tag berhasil diperbarui.');
     }
 
     public function destroy(Tag $tag)
     {
         $tag->delete();
 
-        return redirect()->back()
-            ->with('success', 'Tag berhasil dihapus.');
+        return redirect()->route('admin.tags.index')->with([
+            'success' => 'Tag berhasil dihapus.',
+        ]);
     }
 }
