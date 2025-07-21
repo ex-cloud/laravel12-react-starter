@@ -16,7 +16,7 @@ class MenuSeeder extends Seeder
         $menu = Menu::firstOrCreate([
             'slug' => 'main',
         ], [
-            'name' => 'Main Menu',
+            'title' => 'Main Menu',
         ]);
 
         $menu->items()->delete();

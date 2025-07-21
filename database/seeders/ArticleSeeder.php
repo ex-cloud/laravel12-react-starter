@@ -23,13 +23,19 @@ final class ArticleSeeder extends Seeder
             return;
         }
 
-        $articles = Article::factory()->count($articleCount)->create();
+        $articles = Article::factory()
+            ->count($articleCount)
+            ->published()
+            ->create();
 
         $articles->each(function (Article $article) {
-            // Assign 1 kategori (karena relasi belongsTo)
-            $article->update([
-                'category_id' => Category::inRandomOrder()->first()?->id,
-            ]);
+            $category = Category::inRandomOrder()->first();
+
+            if ($category) {
+                $article->update(['category_id' => $category->id]);
+            } else {
+                $this->command->warn("Tidak bisa assign kategori ke artikel ID: {$article->id}");
+            }
 
             // Assign beberapa tag (many-to-many)
             $tagIds = Tag::inRandomOrder()->take(rand(1, 5))->pluck('id');

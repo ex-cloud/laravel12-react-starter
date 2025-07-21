@@ -81,6 +81,7 @@ export const userColumns = (search: string = ""): ColumnDef<User>[] => [
   },
   {
     id: "actions",
+    enableHiding: false,
     cell: ({ row }) => <UserActionsCell user={row.original} />, // Modular
   },
 ]

@@ -77,6 +77,10 @@ export default function TagIndex({ tags }: TagProps) {
                 data={tags.data}
                 enableInternalFilter={true}
                 enablePagination
+                columnVisibility={{
+                    created_at: false,
+                    updated_at: false,
+                }}
                 headerContent={
                     <>
                     <div className="relative w-64">

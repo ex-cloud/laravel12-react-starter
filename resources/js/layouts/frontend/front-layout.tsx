@@ -12,7 +12,7 @@ export default function FrontLayout({ children }: FrontLayoutProps): React.React
     return (
         <div className="min-h-screen bg-background text-foreground">
             <Header />
-            <main className="max-w-screen-2xl mx-auto px-4 md:px-8 py-6">
+            <main className="mx-auto">
                 {children}
             </main>
             <Toaster position="top-right" richColors />

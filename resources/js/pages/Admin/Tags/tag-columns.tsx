@@ -49,22 +49,65 @@ export const tagColumns = (search: string = ""): ColumnDef<Tag>[] => [
   {
     accessorKey: 'slug',
     header: 'Slug',
-    cell: ({ row }) => highlightSearch(safe(row.original.slug), search),
+    cell: ({ row }) => (
+        <span title={row.original.slug}>
+            {highlightSearch(safe(row.original.slug), search)}
+        </span>
+    )
   },
+  {
+    accessorKey: "articles_count",
+    header: "Jumlah Artikel",
+    enableSorting: true,
+    cell: ({ row }) => row.original.articles_count ?? 0,
+},
   {
     accessorKey: "created_at",
     header: "Created At",
+    meta: { label: "Tanggal Dibuat" },
     enableSorting: true,
-    sortingFn: "datetime", // built-in sorting function
+    enableHiding: true,
+    sortingFn: (rowA, rowB, columnId) => {
+        const a = new Date(rowA.getValue(columnId)).getTime()
+        const b = new Date(rowB.getValue(columnId)).getTime()
+        return a - b
+    },
     cell: ({ row }) => {
         const date = new Date(row.getValue("created_at"))
-        return date.toLocaleDateString("id-ID", {
-        year: "numeric", month: "long", day: "numeric"
+        return date.toLocaleString("id-ID", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        })
+    },
+  },
+  {
+    accessorKey: "updated_at",
+    header: "Update At",
+    meta: { label: "Tanggal Diperbarui" },
+    enableSorting: true,
+    enableHiding: true,
+    sortingFn: (rowA, rowB, columnId) => {
+        const a = new Date(rowA.getValue(columnId)).getTime()
+        const b = new Date(rowB.getValue(columnId)).getTime()
+        return a - b
+    },
+    cell: ({ row }) => {
+        const date = new Date(row.getValue("created_at"))
+        return date.toLocaleString("id-ID", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
         })
     },
   },
   {
     id: "actions",
-        cell: ({ row }) => <TagActionsCell tag={row.original} />,
+    enableHiding: false,
+    cell: ({ row }) => <TagActionsCell tag={row.original} />,
   },
 ]

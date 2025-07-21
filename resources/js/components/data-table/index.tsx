@@ -12,6 +12,8 @@ import {
   getSortedRowModel,
   ColumnFiltersState,
   getFilteredRowModel,
+  VisibilityState,
+  Updater,
 } from "@tanstack/react-table"
 import {
   DropdownMenu,
@@ -41,7 +43,15 @@ interface DataTableProps<TData, TValue> {
   enablePagination?: boolean
   onRowSelectionChange?: (selectedRows: TData[]) => void
   headerContent?: React.ReactNode // ⬅️ ini tambahan
+  columnVisibility?: Record<string, boolean>
 }
+const handleColumnVisibilityChange = (
+        set: React.Dispatch<React.SetStateAction<VisibilityState>>
+        ) =>
+        (updater: Updater<VisibilityState>) =>
+            set((prev) =>
+            typeof updater === "function" ? updater(prev) : updater
+            )
 
 export function DataTable<TData, TValue>({
   columns,
@@ -55,8 +65,19 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([
   { id: "name", desc: false }, // ✅ default sort by name ascending (A-Z)
 ])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [rowSelection, setRowSelection] = React.useState({})
+    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+    const [rowSelection, setRowSelection] = React.useState({})
+    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("table.columnVisibility")
+            try {
+            return saved ? JSON.parse(saved) : { created_at: false, updated_at: false }
+            } catch {
+            return { created_at: false, updated_at: false }
+            }
+        }
+        return { created_at: false, updated_at: false }
+    })
 
   const table = useReactTable({
     data,
@@ -68,19 +89,22 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: handleColumnVisibilityChange(setColumnVisibility),
     state: {
-      sorting,
-      columnFilters,
-      rowSelection,
+        sorting,
+        columnFilters,
+        rowSelection,
+        columnVisibility,
     },
   })
 
   React.useEffect(() => {
-    if (onRowSelectionChange) {
+      localStorage.setItem("table.columnVisibility", JSON.stringify(columnVisibility))
+      if (onRowSelectionChange) {
       const selected = table.getFilteredSelectedRowModel().rows.map((r) => r.original)
       onRowSelectionChange(selected)
     }
-  }, [rowSelection, onRowSelectionChange, table])
+  }, [rowSelection, onRowSelectionChange, table, columnVisibility])
 
   return (
     <div>

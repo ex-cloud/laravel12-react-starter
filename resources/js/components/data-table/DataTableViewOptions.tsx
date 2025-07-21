@@ -31,10 +31,7 @@ export function DataTableViewOptions<TData>() {
         <DropdownMenuSeparator />
         {table
           .getAllColumns()
-          .filter(
-            (column) =>
-              typeof column.accessorFn !== "undefined" && column.getCanHide()
-          )
+          .filter((column) => column.id !== "select" && column.getCanHide())
           .map((column) => (
             <DropdownMenuCheckboxItem
               key={column.id}
@@ -42,7 +39,9 @@ export function DataTableViewOptions<TData>() {
               checked={column.getIsVisible()}
               onCheckedChange={(value) => column.toggleVisibility(!!value)}
             >
-              {column.id}
+              {typeof column.columnDef.header === "string"
+                ? column.columnDef.header
+                : column.id.replace(/_/g, ' ')} {/* ubah snake_case ke normal */}
             </DropdownMenuCheckboxItem>
           ))}
       </DropdownMenuContent>

@@ -10,16 +10,19 @@ class TagResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param Request $request
-     * @return array<string, mixed>
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     * @property \App\Models\Tag $resource
      */
     public function toArray(Request $request): array
     {
         return [
-            'id'         => $this->id,
-            'name'       => $this->name,
-            'slug'       => $this->slug,
-            'created_at' => $this->created_at?->format('j F Y') ?? null,
+            'id'          => $this->resource->id,
+            'name'        => $this->resource->name,
+            'slug'        => $this->resource->slug,
+            'created_at' => $this->resource->created_at,
+            'updated_at' => $this->resource->updated_at,
+            'articles_count' => $this->resource->articles_count ?? 0,
         ];
     }
 }

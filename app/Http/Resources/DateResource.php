@@ -1,33 +1,38 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Resources;
 
-use Carbon\CarbonInterface;
-use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Contracts\Support\Arrayable;
+use JsonSerializable;
+use Stringable;
+use Carbon\Carbon;
 
-/**
- * Class DateResource
- *
- * @property CarbonInterface $resource
- */
-final class DateResource extends JsonResource
+final class DateResource implements JsonSerializable, Arrayable, Stringable
 {
-    /** @return array<string, mixed> */
-    public function toArray(Request $request): array
-    {
-        if (!$this->resource instanceof CarbonInterface) {
-            throw new \InvalidArgumentException('DateResource expects an instance of CarbonInterface.');
-        }
-        return [
+    public function __construct(
+        protected Carbon $date,
+        protected string $timezone = 'Asia/Jakarta',
+        protected ?string $format = null
+    ) {}
 
-            'human' => $this->resource->diffForHumans(),
-            'string' => $this->resource->toDateTimeString(),
-            'local' => $this->resource->toDateTimeLocalString(),
-            'timestamp' => $this->resource->timestamp,
-            'iso'       => $this->resource->toIso8601String(),
-        ];
+    public function toArray(): string
+    {
+        return $this->format();
+    }
+
+    public function __toString(): string
+    {
+        return $this->format();
+    }
+
+    public function jsonSerialize(): string
+    {
+        return $this->format();
+    }
+
+    protected function format(): string
+    {
+        return $this->date->timezone($this->timezone)
+            ->format($this->format ?? 'Y-m-d H:i:s');
     }
 }

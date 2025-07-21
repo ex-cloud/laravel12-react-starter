@@ -15,7 +15,9 @@ class TagController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Tag::query();
+        $query = Tag::query()
+            ->withCount('articles')
+            ->orderBy('articles_count', 'desc');
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {

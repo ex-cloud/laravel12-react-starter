@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\ArticleStatusEnum;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
@@ -27,12 +28,26 @@ final class ArticleFactory extends Factory
             'meta_title' => $this->faker->sentence,
             'meta_description' => $this->faker->text(150),
             'meta_keywords' => $this->faker->words(5, true),
-            'status' => $this->faker->randomElement(['draft', 'published']),
+            'status' => $this->faker->randomElement([
+                ArticleStatusEnum::Draft->value,
+                ArticleStatusEnum::Published->value,
+                ArticleStatusEnum::Archived->value,
+            ]),
             'published_at' => null,
             'author_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'category_id' => Category::inRandomOrder()->first()?->id ?? Category::factory(),
             'is_published' => false, // Default to not published
+            'views' => rand(0, 1000),
             'created_at' => now(),
         ];
+    }
+
+    public function published(): static
+    {
+        return $this->state(fn() => [
+            'status' => 'published',
+            'is_published' => true,
+            'published_at' => now()->subDays(rand(1, 30)),
+        ]);
     }
 }

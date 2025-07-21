@@ -41,21 +41,16 @@ export default function AppHeader() {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, 'change', (latest) => {
+    useMotionValueEvent(scrollY, 'change', (latest) => {
     setScrolled(latest > 30);
   });
-
   return (
     <motion.header
       initial={false}
-      animate={{
-        height: scrolled ? 56 : 58,
-        // backgroundColor: scrolled ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)',
-      }}
-      transition={{ duration: 0.25 }}
-      className={cn(
-        "sticky top-0 z-50 w-full backdrop-blur-md transition-all",
-        scrolled ? "bg-white/95 dark:bg-background/80 shadow" : "bg-white/70 dark:bg-background/50"
+        transition={{ duration: 0.25 }}
+        className={cn(
+        "sticky top-0 z-50 w-full backdrop-blur-md transition-all h-14",
+        scrolled ? "bg-white/95 dark:bg-background/80 border-b " : "bg-transparent"
       )}
     >
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8 flex h-full w-full items-center justify-between gap-4 transition-all">
@@ -80,7 +75,7 @@ export default function AppHeader() {
                     <Link
                     href={item.url}
                     className={cn(
-                        'transition-colors hover:text-white',
+                        'transition-colors dark:hover:text-white hover:text-gray-500/50',
                         url === item.url && 'text-primary font-semibold'
                     )}
                     >
@@ -117,7 +112,7 @@ export default function AppHeader() {
 
             {/* Right: Auth & theme toggle */}
             <div className="flex items-center gap-2">
-            
+
                 <div className="hidden md:block h-5 w-px dark:bg-muted-foreground bg-border"></div>
                 {/* User / Auth */}
                 {auth?.user ? (

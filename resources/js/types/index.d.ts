@@ -49,4 +49,5 @@ export interface Tag {
     slug: string;
     created_at?: string;
     updated_at?: string;
+    articles_count?: number;
 }
