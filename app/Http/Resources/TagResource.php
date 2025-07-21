@@ -20,8 +20,8 @@ class TagResource extends JsonResource
             'id'          => $this->resource->id,
             'name'        => $this->resource->name,
             'slug'        => $this->resource->slug,
-            'created_at' => $this->resource->created_at,
-            'updated_at' => $this->resource->updated_at,
+            'created_at' => $this->resource->created_at?->format('Y-m-d H:i:s'), // atau tetap raw
+            'updated_at' => $this->resource->updated_at?->format('Y-m-d H:i:s'),
             'articles_count' => $this->resource->articles_count ?? 0,
         ];
     }

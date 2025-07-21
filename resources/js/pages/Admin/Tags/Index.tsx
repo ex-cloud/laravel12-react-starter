@@ -60,13 +60,28 @@ export default function TagIndex({ tags }: TagProps) {
         const debouncedSearch = useDebounce(search, 300)
         const mergedSearch = debouncedSearch.trim()
 
+        // 1️⃣ useEffect untuk pencarian
         useEffect(() => {
-            console.log("Searching for:", debouncedSearch)
         router.get(route("admin.tags.index"), { search: debouncedSearch }, {
             preserveState: true,
             replace: true,
         })
         }, [debouncedSearch])
+
+        // 2️⃣ useEffect untuk event tag:delete
+        useEffect(() => {
+        const handleDelete = (e: CustomEvent<Tag>) => {
+            setSelectedTag(e.detail)
+            setDialogMode("delete")
+            setOpenDialog(true)
+        }
+
+        window.addEventListener("tag:delete", handleDelete as EventListener)
+
+        return () => {
+            window.removeEventListener("tag:delete", handleDelete as EventListener)
+        }
+        }, []) // kosong artinya hanya dijalankan sekali saat mount
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

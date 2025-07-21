@@ -34,7 +34,8 @@ final class Category extends Model
     ];
     public function getRouteKeyName(): string
     {
-        return 'slug';
+        // Gunakan 'id' untuk route admin, dan 'slug' untuk public
+        return request()->is('admin/*') ? 'id' : 'slug';
     }
 
     protected static function booted(): void

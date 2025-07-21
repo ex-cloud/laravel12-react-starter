@@ -1,22 +1,14 @@
 // components/Tags/TagActionsCell.tsx
 
-import { useState } from "react"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import {
-  AlertDialog, AlertDialogTrigger, AlertDialogContent,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogCancel
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Loader2 } from "lucide-react"
-import { router } from "@inertiajs/react"
+import { MoreHorizontal } from "lucide-react"
 import type { Tag } from "@/types"
 
-export function TagActionsCell({ tag }: { tag: Tag }) {
-  const [isDeleting, setIsDeleting] = useState(false)
+export function TagActionsCell({ tag, onDelete }: { tag: Tag, onDelete?: (tag: Tag) => void }) {
 
   return (
     <DropdownMenu>
@@ -41,36 +33,9 @@ export function TagActionsCell({ tag }: { tag: Tag }) {
         }}>
           Edit
         </DropdownMenuItem>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start">Hapus</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Hapus Tag?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Yakin ingin menghapus Tag <strong>{tag.name}</strong>? Tindakan ini tidak bisa dibatalkan.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Batal</AlertDialogCancel>
-              <Button
-                variant="destructive"
-                disabled={isDeleting}
-                onClick={() => {
-                  setIsDeleting(true)
-                  router.delete(`/admin/tags/${tag.id}`, {
-                    onSuccess: () => setIsDeleting(false),
-                    onError: () => setIsDeleting(false),
-                  })
-                }}
-              >
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isDeleting ? "Menghapus..." : "Hapus"}
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <DropdownMenuItem onClick={() => onDelete?.(tag)}>
+            Hapus
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

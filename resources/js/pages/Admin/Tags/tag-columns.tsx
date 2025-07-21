@@ -108,6 +108,10 @@ export const tagColumns = (search: string = ""): ColumnDef<Tag>[] => [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => <TagActionsCell tag={row.original} />,
+    cell: ({ row }) => <TagActionsCell tag={row.original}
+    onDelete={(tag) => {
+      window.dispatchEvent(new CustomEvent("tag:delete", { detail: tag }))
+    }}
+     />,
   },
 ]

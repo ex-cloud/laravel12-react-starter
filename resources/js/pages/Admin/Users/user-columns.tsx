@@ -2,9 +2,9 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown } from "lucide-react"
-import type { User } from "@/types"
 import { highlightSearch } from "@/utils/highlight"
 import { UserActionsCell } from "./UserActionsCell"
+import { User } from "@/types"
 
 // Helper untuk menghindari undefined/null
 const safe = (text?: string | null): string => text ?? ""
@@ -72,16 +72,54 @@ export const userColumns = (search: string = ""): ColumnDef<User>[] => [
   {
     accessorKey: "created_at",
     header: "Created At",
+    meta: { label: "Tanggal Dibuat" },
+    enableSorting: true,
+    enableHiding: true,
+    sortingFn: (rowA, rowB, columnId) => {
+        const a = new Date(rowA.getValue(columnId)).getTime()
+        const b = new Date(rowB.getValue(columnId)).getTime()
+        return a - b
+    },
     cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"))
-      return date.toLocaleDateString("id-ID", {
-        year: "numeric", month: "long", day: "numeric"
-      })
+        const date = new Date(row.getValue("created_at"))
+        return date.toLocaleString("id-ID", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        })
     },
   },
   {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => <UserActionsCell user={row.original} />, // Modular
+    accessorKey: "updated_at",
+    header: "Update At",
+    meta: { label: "Tanggal Diperbarui" },
+    enableSorting: true,
+    enableHiding: true,
+    sortingFn: (rowA, rowB, columnId) => {
+        const a = new Date(rowA.getValue(columnId)).getTime()
+        const b = new Date(rowB.getValue(columnId)).getTime()
+        return a - b
+    },
+    cell: ({ row }) => {
+        const date = new Date(row.getValue("created_at"))
+        return date.toLocaleString("id-ID", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        })
+    },
   },
+  {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => <UserActionsCell user={row.original}
+      onDelete={(user) => {
+        window.dispatchEvent(new CustomEvent("user:delete", { detail: user }))
+      }}
+       />,
+    },
 ]

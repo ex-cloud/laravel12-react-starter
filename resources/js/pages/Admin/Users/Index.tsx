@@ -64,13 +64,30 @@ const handleEdit = () => {
 const [search, setSearch] = useState("")
 const debouncedSearch = useDebounce(search, 300)
 const mergedSearch = debouncedSearch.trim()
-useEffect(() => {
-    console.log("Searching for:", debouncedSearch)
-  router.get(route("admin.users.index"), { search: debouncedSearch }, {
-    preserveState: true,
-    replace: true,
-  })
-}, [debouncedSearch])
+
+    // 1️⃣ useEffect untuk pencarian
+    useEffect(() => {
+        console.log("Searching for:", debouncedSearch)
+    router.get(route("admin.users.index"), { search: debouncedSearch }, {
+        preserveState: true,
+        replace: true,
+    })
+    }, [debouncedSearch])
+
+    // 2️⃣ useEffect untuk event tag:delete
+    useEffect(() => {
+    const handleDelete = (e: CustomEvent<User>) => {
+        setSelectedUser(e.detail)
+        setDialogMode("delete")
+        setOpenDialog(true)
+    }
+
+    window.addEventListener("user:delete", handleDelete as EventListener)
+
+    return () => {
+        window.removeEventListener("user:delete", handleDelete as EventListener)
+    }
+    }, []) // kosong artinya hanya dijalankan sekali saat mount
 
 
   return (
@@ -81,9 +98,12 @@ useEffect(() => {
             <DataTable
             columns={userColumns(mergedSearch)}
             data={users.data}
-            // filterableColumns={["name", "username", "email"]}
             enableInternalFilter={true}
             enablePagination
+            columnVisibility={{
+                    created_at: false,
+                    updated_at: false,
+                }}
             headerContent={
                 <>
                 <div className="relative w-64">

@@ -1,39 +1,22 @@
-import { useEffect } from 'react'
-import type { Tag } from '@/types'
+import { useEffect } from "react"
+import type { Tag } from "@/types"
 
 export function useTagDialogListener(
-  setSelectedTag: (tag: Tag) => void,
-  setDialogMode: (mode: "view" | "edit") => void,
+  setSelectedTag: (tag: Tag | null) => void,
+  setDialogMode: (mode: "view" | "edit" | "delete" | null) => void,
   setOpenDialog: (open: boolean) => void
-
 ) {
   useEffect(() => {
     const handleView = (e: CustomEvent<Tag>) => {
-      const tag = e.detail
-      if (!tag) return
-
-      setSelectedTag(tag)
+      setSelectedTag(e.detail)
       setDialogMode("view")
-
-      // Delay dialog open agar state user sudah siap
-        requestAnimationFrame(() => {
-            setOpenDialog(true)
-        })
-        setTimeout(() => {
-            setOpenDialog(true)
-          }, 50)
+      setOpenDialog(true)
     }
 
     const handleEdit = (e: CustomEvent<Tag>) => {
-      const tag = e.detail
-      if (!tag) return
-
-      setSelectedTag(tag)
+      setSelectedTag(e.detail)
       setDialogMode("edit")
-
-      requestAnimationFrame(() => {
-        setOpenDialog(true)
-      })
+      setOpenDialog(true)
     }
 
     window.addEventListener("tag:view", handleView as EventListener)
