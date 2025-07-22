@@ -28,7 +28,10 @@ final class ProfilePublicUpdateRequest extends FormRequest
             'profile.gender' => ['nullable', 'string', Rule::in(GenderEnum::values())],
             'profile.birthdate' => ['nullable', 'date'],
             'profile.marital_status' => ['nullable', 'string', 'max:255'],
-            'profile.phone' => ['nullable', 'string', 'max:255'],
+            'profile.phone' => [
+                'nullable',
+                'regex:/^\+?[0-9]{8,13}$/',
+            ],
             'profile.address' => ['nullable', 'string'],
         ];
     }

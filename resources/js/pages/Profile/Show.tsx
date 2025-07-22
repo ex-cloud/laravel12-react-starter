@@ -12,7 +12,15 @@ import PersonalInfoCard from './PersonalInfoCard'
 import { useState } from 'react'
 import { router } from '@inertiajs/react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { toast } from "sonner"
+import { format } from "date-fns"
+import { id } from "date-fns/locale"
 
+const formattedTime = format(
+  new Date(),
+  "eeee, dd MMMM yyyy 'pukul' HH:mm",
+  { locale: id }
+)
 export default function ProfileShow({
   user,
   genders,
@@ -41,10 +49,29 @@ export default function ProfileShow({
   })
 
   const handleSubmit = () => {
+    const phone = form.data.profile.phone ?? ''
+
+    // Validasi format: hanya angka (boleh diawali +), panjang 8–13 digit
+    const phoneRegex = /^\+?[0-9]{8,13}$/
+
+    if (phone && !phoneRegex.test(phone)) {
+        form.setError('profile.phone', 'Nomor telepon tidak valid. Harus 8–13 digit.')
+        return
+    }
+    form.clearErrors() // bersihkan error jika valid
+
     form.patch(route('profile.public.update', user.username), {
         preserveScroll: true,
         onSuccess: () => {
-            setIsEditing(false);
+            toast.success("Profil berhasil diperbarui", {
+                description: formattedTime,
+            });
+        setIsEditing(false);
+        },
+        onError: () => {
+            toast.error("Gagal menyimpan profil", {
+                description: "Periksa kembali data yang diisi.",
+            });
         },
     });
   }

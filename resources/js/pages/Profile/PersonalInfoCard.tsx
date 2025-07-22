@@ -5,7 +5,7 @@ import { User } from "@/types";
 import { ChevronDownIcon, PencilIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { useForm } from "@inertiajs/react";
+import PhoneInput from "@/components/form/PhoneInput";
 
 interface PersonalInfoCardProps {
   user: User;
@@ -46,10 +47,14 @@ export default function PersonalInfoCard({
   setIsEditing,
   onSubmit,
 }: PersonalInfoCardProps) {
-  const { data, setData } = form;
+    const { data, setData } = form;
 
-  const [open, setOpen] = useState(false);
-  const currentYear = new Date().getFullYear();
+    const [open, setOpen] = useState(false);
+    const currentYear = new Date().getFullYear();
+    const [isPhoneValid, setIsPhoneValid] = useState(true)
+    const handleValidityChange = useCallback((isValid: boolean) => {
+        setIsPhoneValid(isValid)
+    }, [])
 
   const handleEditClick = () => setIsEditing(true);
   const handleCancelClick = () => {
@@ -90,14 +95,13 @@ export default function PersonalInfoCard({
       </div>
 
       {isEditing ? (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div>
-            <Label htmlFor="name" className="block text-sm mb-1">Full name</Label>
+            <Label htmlFor="name">Full name</Label>
             <Input
               type="text"
               value={data.name}
               disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
@@ -152,38 +156,36 @@ export default function PersonalInfoCard({
           </div>
 
           <div>
-            <Label className="block text-sm mb-1">Marital Status</Label>
+            <Label htmlFor="marital_status">Marital Status</Label>
             <Input
               type="text"
               name="marital_status"
               value={data.profile.marital_status}
               onChange={(e) => setData("profile", { ...data.profile, marital_status: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
           <div>
-            <Label className="block text-sm mb-1">Phone</Label>
-            <Input
-              type="tel"
-              name="phone"
-              value={data.profile.phone}
-              onChange={(e) => setData("profile", { ...data.profile, phone: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            <PhoneInput
+                value={data.profile.phone}
+                onChange={(val) =>
+                    setData("profile", { ...data.profile, phone: val })
+                }
+                onValidityChange={handleValidityChange}
+                errorMessage={form.errors?.['profile.phone']}
             />
           </div>
 
           <div>
-            <Label className="block text-sm mb-1">Address</Label>
+            <Label htmlFor="address">Address</Label>
             <Textarea
               value={data.profile.address}
               onChange={(e) => setData("profile", { ...data.profile, address: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
           <div className="mt-4 flex gap-2">
-            <Button size="sm" onClick={handleSaveClick}>Save</Button>
+            <Button size="sm" onClick={handleSaveClick} disabled={!isPhoneValid}>Save</Button>
             <Button size="sm" variant="outline" onClick={handleCancelClick}>Cancel</Button>
           </div>
         </div>
