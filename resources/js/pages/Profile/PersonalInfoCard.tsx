@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { format } from "date-fns"
-import { useForm } from "@inertiajs/react";
+import { Link, useForm } from "@inertiajs/react";
 import PhoneInput from "@/components/form/PhoneInput";
 
 interface PersonalInfoCardProps {
@@ -96,8 +96,13 @@ export default function PersonalInfoCard({
 
       {isEditing ? (
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="name">Full name</Label>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+                <Label htmlFor="name">Full name</Label>
+                <Link href={route('profile.edit')}>
+                    <p className="text-xs">Unlock</p>
+                </Link>
+            </div>
             <Input
               type="text"
               value={data.name}
