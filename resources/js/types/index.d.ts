@@ -30,6 +30,11 @@ export interface SharedData {
     sidebarOpen: boolean;
     [key: string]: unknown;
 }
+export type PageProps<T extends object = Record<string, never>> = {
+  auth: Auth;
+  ziggy: Config & { location: string };
+  sidebarOpen: boolean;
+} & T;
 
 export interface User {
     id: string;
@@ -40,7 +45,18 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    profile?: Profile;
     [key: string]: unknown; // This allows for additional properties...
+}
+export interface Profile {
+    user_id: string;
+    birthdate?: string;
+    gender?: string;
+    marital_status?: string;
+    phone?: string;
+    address?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Tag {

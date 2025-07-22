@@ -26,6 +26,10 @@ final class UserResource extends JsonResource
                     ? 'storage/' . $this->resource->avatar
                     : $this->resource->avatar)
                 : asset('assets/default.jpg'),
+            // ✅ Flatten ProfileResource langsung ke array
+
+            'profile' => $this->whenLoaded('profile', fn() => (new ProfileResource($this->resource->profile))->toArray($request)),
+
             'created_at' => $this->resource->created_at?->format('Y-m-d H:i:s'), // atau tetap raw
             'updated_at' => $this->resource->updated_at?->format('Y-m-d H:i:s'),
         ];

@@ -19,6 +19,7 @@ final class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'id' => Str::uuid(), // ini oke
             'name' => fake()->name(),
             'username' => fake()->unique()->userName(),
             'avatar' => '/assets/default.jpg',

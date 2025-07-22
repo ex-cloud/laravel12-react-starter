@@ -15,6 +15,7 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+
     /**
      * Show the user's profile settings page.
      */
@@ -39,18 +40,26 @@ class ProfileController extends Controller
             $user->email_verified_at = null;
         }
 
-        // Handle password update
+        // Update password jika ada
         if (!empty($data['password'])) {
             if (!Hash::check($data['current_password'], $user->password)) {
                 return back()->withErrors(['current_password' => 'Password saat ini salah.']);
             }
 
-            $user->password = bcrypt($data['password']);
+            $user->password = Hash::make($data['password']);
         }
-
+        // Hapus password agar tidak di-fill massal
         unset($data['password'], $data['password_confirmation'], $data['current_password']);
-
+        // Simpan field utama
         $user->fill($data)->save();
+
+        // Simpan relasi ke profile
+        if (isset($data['profile'])) {
+            $user->profile()->updateOrCreate(
+                ['user_id' => $user->id],
+                $data['profile']
+            );
+        }
 
         return to_route('profile.edit')->with('status', 'profile-updated');
     }

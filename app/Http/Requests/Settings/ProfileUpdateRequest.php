@@ -38,6 +38,13 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'profile.gender' => ['nullable', 'string'],
+            'profile.birthdate' => ['nullable', 'date'],
+            'profile.phone' => ['nullable', 'string', 'max:20'],
+            'profile.marital_status' => ['nullable', 'string'],
+            'profile.address' => ['nullable', 'string', 'max:255'],
+            'password' => ['nullable', 'confirmed'],
+            'current_password' => ['nullable', 'required_with:password'],
 
         ];
     }
