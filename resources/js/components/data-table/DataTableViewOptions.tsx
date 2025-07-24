@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { useTable } from "./TableContext"
+
 export function DataTableViewOptions<TData>() {
   const table = useTable<TData>()
 

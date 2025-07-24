@@ -1,7 +1,7 @@
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { usePage, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { User } from 'lucide-react';
+import { Facebook, House, Instagram, LayoutDashboard, PanelLeftDashed, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,11 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
 import AppearanceToggleDropdown from '../appearance-dropdown';
 import DropdownMenuMobile from '../ui/DropdownMenuMobile';
 import type { MenuItem } from '@/types/menu';
 import { cn } from '@/lib/utils';
+import AppLogoIcon from '../app-logo-icon';
 
 type PageProps = {
   menu?: {
@@ -59,11 +61,75 @@ export default function AppHeader() {
             <div className="md:hidden">
                 <DropdownMenuMobile items={items} />
             </div>
-            <Link href="/" className="text-xl font-semibold tracking-tight">
-                MyApp
-            </Link>
-        </div>
 
+            <div className='hidden lg:flex items-center'>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <div className="flex items-center gap-1 text-xl font-semibold tracking-tight">
+                            <AppLogoIcon className='h-8 w-8'/>
+                            K2NET
+                        </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-60">
+                        <DropdownMenuLabel className='text-xs tracking-tight text-gray-600'>Links</DropdownMenuLabel>
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem>
+                                    <Link
+                                        href='/'
+                                        className="w-full flex items-center text-xs tracking-tight"
+                                    >
+                                        <House className="mr-2 h-4 w-4" />
+                                        Home
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        <DropdownMenuSeparator/>
+                        <DropdownMenuLabel className='text-xs tracking-tight text-gray-600'>Say Hi</DropdownMenuLabel>
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem>
+                                    <a
+                                        href="https://youtube.com"
+                                        className="w-full flex items-center text-xs tracking-tight"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <Youtube className="mr-2 h-4 w-4" />
+                                        Youtube
+                                    </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <a
+                                        href="https://instagram.com"
+                                        className="w-full flex items-center text-xs tracking-tight"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <Instagram className="mr-2 h-4 w-4" />
+                                        Instagram
+                                    </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <a
+                                        href="https://facebook.com"
+                                        className="w-full flex items-center text-xs tracking-tight"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <Facebook className="mr-2 h-4 w-4" />
+                                        Facebook
+                                    </a>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </div>
+            <div className='md:hidden flex items-center mt-2'>
+                <div className='absolute h-1 dark:h-3 w-full top-0 left-0 rounded-b-full animate-in duration-600 delay-200 bg-gradient-to-tr from-sky-500 via-sky-600 to-sky-400 dark:from-[#154D5F]/50 dark:to-[#04021D]/70 blur-xl'/>
+                <Link href='/'>
+                    <AppLogoIcon className='relative z-10 h-10 w-10'/>
+                </Link>
+            </div>
         {/* Middle: Desktop nav */}
         {/* Right: Menu + Auth */}
         <div className="flex items-center gap-6">
@@ -109,54 +175,59 @@ export default function AppHeader() {
             )}
             </nav>
 
-
             {/* Right: Auth & theme toggle */}
             <div className="flex items-center gap-2">
 
                 <div className="hidden md:block h-5 w-px dark:bg-muted-foreground bg-border"></div>
                 {/* User / Auth */}
-                {auth?.user ? (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" aria-label="User Menu" className='cursor-pointer'>
-                            <User className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                            <Link href="/dashboard">Dashboard</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Account</DropdownMenuLabel>
-                            <DropdownMenuItem asChild>
-                            <Link href="/settings/profile">Profile</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                            <Link href="/logout" method="post" as="button">
-                                Logout
-                            </Link>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                        </DropdownMenu>
-                    ) : (
-                        <div className="flex gap-2">
-                        <Link
-                            href={route('login')}
-                            className="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                        >
-                            Log in
-                        </Link>
-                        <Link
-                            href={route('register')}
-                            className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                        >
-                            Register
-                        </Link>
-                        </div>
+                <div className='hidden lg:flex'>
+                    {auth?.user ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" aria-label="User Menu" className='cursor-pointer'>
+                                <LayoutDashboard className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                    <Link href="/dashboard" className='text-[13px] font-medium tracking-tight'>
+                                        <PanelLeftDashed />
+                                        Dashboard
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link href="/settings/profile" className='text-[13px] font-medium tracking-tight'>
+                                        <PanelLeftDashed />
+                                        Your account
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                <Link href="/logout" method="post" as="button" className='text-[13px] font-medium tracking-tight'>
+                                        <PanelLeftDashed />
+                                    Logout
+                                </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+
+                            <div className="hidden lg:flex gap-3">
+                                <AppearanceToggleDropdown />
+                                <Button size={'sm'}>
+                                    <Link
+                                        href={route('login')}
+                                        className="text-sm leading-normal"
+                                    >
+                                        Log in
+                                    </Link>
+                                </Button>
+                            </div>
                     )}
-                <div className="block h-5 w-px dark:bg-muted-foreground bg-border"></div>
-                <AppearanceToggleDropdown />
+                </div>
+                {/* <div className="block h-5 w-px dark:bg-muted-foreground bg-border"></div> */}
+                <AppearanceToggleDropdown className='lg:hidden' />
             </div>
         </div>
       </div>

@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             'address' => 'Jl. Sukarajin 2 lemahneundeut 2',
         ]);
 
-        User::factory(10)->create();
+        User::factory(100)->create();
         $this->call([
             TagSeeder::class,
             CategorySeeder::class,

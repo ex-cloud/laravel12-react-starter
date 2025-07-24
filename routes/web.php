@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
         Route::resource('tags', TagController::class);
         Route::resource('users', UserController::class);
+        Route::post('/users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulk-delete');
     });
 
     Route::get('/admin/menus/builder', [MenuController::class, 'builder'])->name('menus.builder');

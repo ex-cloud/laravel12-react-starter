@@ -22,7 +22,7 @@ export default function AppearanceToggleDropdown({ className = '', ...props }: H
         <div className={className} {...props}>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="cs" size="icon" className="h-8 w-8 rounded-md cursor-pointer">
+                    <Button variant="cs" size="icon" className="h-8 w-18rounded-md cursor-pointer">
                         {getCurrentIcon()}
                         <span className="sr-only">Toggle theme</span>
                     </Button>

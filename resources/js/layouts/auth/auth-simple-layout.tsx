@@ -1,4 +1,3 @@
-import AppHeader from '@/components/Section/Header';
 import AppLogoK2net from '@/components/ui/app-logo-k2net';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -12,8 +11,6 @@ interface AuthLayoutProps {
 export default function AuthSimpleLayout({ children, title, description }: PropsWithChildren<AuthLayoutProps>) {
     return (
         <>
-            <AppHeader />
-
             <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-12">
                 <div className="w-full max-w-md space-y-8">
                     <Link href={route('home')} className="flex flex-col gap-2 items-center justify-center lg:items-start">

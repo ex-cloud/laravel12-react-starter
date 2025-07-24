@@ -14,13 +14,8 @@ import {
   getFilteredRowModel,
   VisibilityState,
   Updater,
+  RowSelectionState,
 } from "@tanstack/react-table"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -32,56 +27,106 @@ import {
 } from "@/components/ui/table"
 import { DataTablePagination } from "./DataTablePagination"
 import { TableContext } from "./TableContext"
-import { Trash } from "lucide-react" // opsional untuk ikon
-import { Button } from "../ui/button"
+import { Loader2 } from "lucide-react"
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends { id: number | string }, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  filterableColumns?: string[] // ⬅️ multi-column filter
+  tableId?: string
+  filterableColumns?: string[]
   enableInternalFilter?: boolean
   enablePagination?: boolean
+  pagination?: {
+    pageIndex: number
+    pageSize: number
+    onPageChange: (pageIndex: number) => void
+    onPageSizeChange: (size: number) => void
+    pageCount: number
+  }
+  resetRowSelectionSignal?: boolean
   onRowSelectionChange?: (selectedRows: TData[]) => void
-  headerContent?: React.ReactNode // ⬅️ ini tambahan
-  columnVisibility?: Record<string, boolean>
+  headerContent?: React.ReactNode
+  onColumnVisibilityChange?: (updater: Updater<VisibilityState>) => void
+  columnVisibility?: VisibilityState
 }
-const handleColumnVisibilityChange = (
-        set: React.Dispatch<React.SetStateAction<VisibilityState>>
-        ) =>
-        (updater: Updater<VisibilityState>) =>
-            set((prev) =>
-            typeof updater === "function" ? updater(prev) : updater
-            )
 
-export function DataTable<TData, TValue>({
+const handleColumnVisibilityChange = (
+  set: React.Dispatch<React.SetStateAction<VisibilityState>>
+) =>
+  (updater: Updater<VisibilityState>) =>
+    set((prev) =>
+      typeof updater === "function" ? updater(prev) : updater
+    )
+
+export function DataTable<TData extends { id: number | string }, TValue>({
   columns,
   data,
   filterableColumns = [],
   enableInternalFilter = true,
   enablePagination = true,
   onRowSelectionChange,
+  resetRowSelectionSignal = false,
   headerContent,
+  pagination,
+  onColumnVisibilityChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([
-  { id: "name", desc: false }, // ✅ default sort by name ascending (A-Z)
-])
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-    const [rowSelection, setRowSelection] = React.useState({})
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
-        if (typeof window !== "undefined") {
-            const saved = localStorage.getItem("table.columnVisibility")
-            try {
-            return saved ? JSON.parse(saved) : { created_at: false, updated_at: false }
-            } catch {
-            return { created_at: false, updated_at: false }
-            }
+  const [sorting, setSorting] = React.useState<SortingState>(() => {
+  return columns.length > 0 ? [{ id: columns[0].id?.toString() ?? "id", desc: false }] : []
+})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
+  
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+
+  const [visibleRows, setVisibleRows] = React.useState(() => {
+    if (!pagination) return 10
+    return data.length
+  })
+  const [isFetchingMore, setIsFetchingMore] = React.useState(false)
+  const tableContainerRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!pagination) {
+      setVisibleRows(10)
+      requestAnimationFrame(() => {
+        if (tableContainerRef.current) {
+          tableContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' })
         }
-        return { created_at: false, updated_at: false }
-    })
+      })
+    }
+
+    const handleScroll = () => {
+      const container = tableContainerRef.current
+      if (!container) return
+
+      const { scrollTop, scrollHeight, clientHeight } = container
+      const nearBottom = scrollTop + clientHeight >= scrollHeight - 50
+
+      if (nearBottom && !isFetchingMore && visibleRows < data.length) {
+        setIsFetchingMore(true)
+        setTimeout(() => {
+          setVisibleRows((prev) => Math.min(prev + 20, data.length))
+          setIsFetchingMore(false)
+        }, 800)
+      }
+    }
+
+    const container = tableContainerRef.current
+    container?.addEventListener("scroll", handleScroll)
+    return () => container?.removeEventListener("scroll", handleScroll)
+  }, [isFetchingMore, visibleRows, data.length, pagination])
+
+  React.useEffect(() => {
+    if (pagination) {
+      setVisibleRows(data.length)
+    }
+  }, [pagination, data.length])
 
   const table = useReactTable({
-    data,
+    data: !pagination ? data.slice(0, visibleRows) : data,
     columns,
+    manualPagination: !!pagination,
+    pageCount: pagination?.pageCount,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
@@ -89,75 +134,79 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onRowSelectionChange: setRowSelection,
-    onColumnVisibilityChange: handleColumnVisibilityChange(setColumnVisibility),
+    getRowId: (row) => row.id.toString(),
+    onColumnVisibilityChange: onColumnVisibilityChange ?? handleColumnVisibilityChange(setColumnVisibility),
     state: {
-        sorting,
-        columnFilters,
-        rowSelection,
-        columnVisibility,
+      sorting,
+      columnFilters,
+      rowSelection,
+      columnVisibility,
+      pagination: pagination
+        ? {
+            pageIndex: pagination.pageIndex,
+            pageSize: pagination.pageSize,
+          }
+        : undefined,
     },
   })
 
   React.useEffect(() => {
-      localStorage.setItem("table.columnVisibility", JSON.stringify(columnVisibility))
-      if (onRowSelectionChange) {
-      const selected = table.getFilteredSelectedRowModel().rows.map((r) => r.original)
-      onRowSelectionChange(selected)
+    if (resetRowSelectionSignal) {
+      table.resetRowSelection()
     }
-  }, [rowSelection, onRowSelectionChange, table, columnVisibility])
+  }, [resetRowSelectionSignal, table])
+
+    // 2️⃣ Hanya trigger row selection saat benar-benar berubah
+    const lastSelectedRef = React.useRef<TData[]>([])
+
+    React.useEffect(() => {
+    if (onRowSelectionChange) {
+        const selected = table.getFilteredSelectedRowModel().rows.map((r) => r.original)
+
+        const isEqual =
+        selected.length === lastSelectedRef.current.length &&
+        selected.every((row, i) => row.id === lastSelectedRef.current[i]?.id)
+
+        if (!isEqual) {
+        lastSelectedRef.current = selected
+        onRowSelectionChange(selected)
+        }
+    }
+    }, [rowSelection, onRowSelectionChange, table])
 
   return (
     <div>
       <TableContext.Provider value={table}>
         <div>
-            {/* ✅ Kondisi Bulk Actions */}
-        {table.getFilteredSelectedRowModel().rows.length > 0 && (
-        <div className="flex gap-2">
-                <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline">Bulk actions</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem
-                    onClick={() => {
-                        const selected = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
-                        console.log("Delete selected items:", selected)
-                        // TODO: trigger delete action atau modal konfirmasi
-                    }}
-                    className="text-red-600 focus:text-red-700"
-                    >
-                    <Trash className="mr-2 h-4 w-4" /> Delete selected
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-                </DropdownMenu>
+          {enableInternalFilter && (
+            <div className="flex flex-wrap justify-between items-start py-4 gap-4">
+              <div className="flex flex-wrap gap-2">
+                {filterableColumns.map((col) =>
+                  table.getColumn(col) ? (
+                    <Input
+                      key={col}
+                      placeholder={`Filter ${col}...`}
+                      value={(table.getColumn(col)?.getFilterValue() as string) ?? ""}
+                      onChange={(event) =>
+                        table.getColumn(col)?.setFilterValue(event.target.value)
+                      }
+                      className="max-w-sm"
+                    />
+                  ) : null
+                )}
+              </div>
+              {headerContent && <div className="flex gap-2">{headerContent}</div>}
             </div>
-        )}
-            {enableInternalFilter && (
-                <div className="flex flex-wrap justify-between items-start py-4 gap-4">
-                <div className="flex flex-wrap gap-2">
-                    {filterableColumns.map((col) =>
-                    table.getColumn(col) ? (
-                        <Input
-                        key={col}
-                        placeholder={`Filter ${col}...`}
-                        value={(table.getColumn(col)?.getFilterValue() as string) ?? ""}
-                        onChange={(event) =>
-                            table.getColumn(col)?.setFilterValue(event.target.value)
-                        }
-                        className="max-w-sm"
-                        />
-                    ) : null
-                    )}
-                </div>
-                {headerContent && <div className="flex gap-2">{headerContent}</div>}
-                </div>
-            )}
+          )}
         </div>
-    </TableContext.Provider>
+      </TableContext.Provider>
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
-          <TableHeader className="dark:bg-zinc-900 sticky top-0 z-10">
+      <div
+        className="overflow-auto max-h-[70vh] rounded-lg border"
+        ref={tableContainerRef}
+      >
+        <Table className="min-w-full">
+          <TableHeader className="sticky top-0 z-10 bg-white dark:bg-zinc-900 shadow-md border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -191,11 +240,38 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
+
+        {!pagination && visibleRows < data.length && isFetchingMore && (
+          <tfoot>
+            <tr>
+              <td colSpan={columns.length}>
+                <div className="w-full h-12 shimmer-row flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Memuat data tambahan...</span>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </div>
 
       {enablePagination && (
         <div className="py-4">
-          <DataTablePagination table={table} />
+          <DataTablePagination
+            {...(pagination
+              ? {
+                  pageIndex: pagination.pageIndex,
+                  pageCount: pagination.pageCount,
+                  pageSize: pagination.pageSize,
+                  onPageChange: pagination.onPageChange,
+                  onPageSizeChange: pagination.onPageSizeChange,
+                  selectedCount: table.getFilteredSelectedRowModel().rows.length,
+                  totalCount: table.getRowModel().rows.length,
+                }
+              : {
+                  table,
+                })}
+          />
         </div>
       )}
     </div>

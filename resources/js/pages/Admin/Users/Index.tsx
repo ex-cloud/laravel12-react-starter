@@ -2,13 +2,12 @@
 
 import AppLayout from '@/layouts/app-layout'
 import { Head, Link, usePage, router } from '@inertiajs/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/data-table'
 import { userColumns } from './user-columns'
 import type { BreadcrumbItem, User } from '@/types'
 import UserViewDialog from '@/components/UserViewDialog'
-import { useFlashToast } from '@/hooks/use-flash-toast'
 import { useUserDialogListener } from '@/hooks/use-user-dialog-listener'
 import { EditSheet } from '@/components/EditSheet'
 import { ExtractFormFields } from '@/types/utils'
@@ -16,34 +15,90 @@ import { userFields, userToFormData } from './user-fields'
 import AvatarUploader from '@/components/AvatarUploader'
 import { useDebounce } from '@/hooks/use-debounce'
 import { Input } from '@/components/ui/input'
-import { Loader2, Search } from 'lucide-react'
+import { Loader2, Search, Trash } from 'lucide-react'
 import { DataTableViewOptions } from '@/components/data-table/DataTableViewOptions'
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { toast } from "sonner"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useTablePreferences } from '@/hooks/use-table-preferences'
+
+type Flash = {
+  success?: string
+  error?: string
+  info?: string
+}
 
 export type UserForm = ExtractFormFields<User>
 
+type PaginationMeta = {
+  total: number
+  current_page: number
+  last_page: number
+  per_page: number
+}
 type UsersPageProps = {
   users: {
     data: User[]
+    meta: PaginationMeta
+    links?: {
+      next?: string
+      prev?: string
+    }
   }
+}
+
+export function useFlashToast(flash?: Flash) {
+  useEffect(() => {
+    if (!flash) return
+
+    if (flash.success) {
+      toast.success(flash.success, {
+        duration: 4000,
+        icon: "✅",
+      })
+    } else if (flash.error) {
+      toast.error(flash.error, {
+        duration: 4000,
+        icon: "❌",
+      })
+    } else if (flash.info) {
+      toast(flash.info, {
+        duration: 4000,
+        icon: "ℹ️",
+      })
+    }
+  }, [flash])
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'List User', href: '/admin/users' },
 ]
 
+
 export default function UsersIndex({ users }: UsersPageProps) {
-  const { flash } = usePage().props as { flash?: { success?: string; error?: string; info?: string } }
+  const { flash } = usePage().props as { flash?: Flash }
+  const tableKey = "users"
+  const {
+    pageSize,
+    columnVisibility,
+    setPageSize,
+    setColumnVisibility,
+    } = useTablePreferences(tableKey)
 
-  const [resetAvatar, setResetAvatar] = useState(false)
-  const [newAvatar, setNewAvatar] = useState<File | null>(null)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [dialogMode, setDialogMode] = useState<"view" | "edit" | "delete" | null>(null)
-  const [openDialog, setOpenDialog] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+    useFlashToast(flash)
 
+    const [resetAvatar, setResetAvatar] = useState(false)
+    const [newAvatar, setNewAvatar] = useState<File | null>(null)
+    const [selectedUser, setSelectedUser] = useState<User | null>(null)
+    const [dialogMode, setDialogMode] = useState<"view" | "edit" | "delete" | "bulk-delete" | null>(null)
+    const [openDialog, setOpenDialog] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [selectedUsers, setSelectedUsers] = useState<User[]>([])
+    const [resetSelectionSignal, setResetSelectionSignal] = useState(false)
+    const [pageIndex, setPageIndex] = useState(users.meta.current_page - 1)
+    const [page, setPage] = useState(users.meta.current_page)
+    const [isLoading, setIsLoading] = useState(false)
 
-  useFlashToast(flash)
   useUserDialogListener(setSelectedUser, setDialogMode, setOpenDialog)
 
   const handleCloseDialog = () => {
@@ -63,16 +118,36 @@ const handleEdit = () => {
 
 const [search, setSearch] = useState("")
 const debouncedSearch = useDebounce(search, 300)
+const debouncedPageSize = useDebounce(pageSize, 300)
+
 const mergedSearch = debouncedSearch.trim()
 
+const resetSelection = () => {
+  setSelectedUsers([])
+  requestAnimationFrame(() => {
+    setResetSelectionSignal(true)
+    requestAnimationFrame(() => setResetSelectionSignal(false))
+  })
+}
+
     // 1️⃣ useEffect untuk pencarian
-    useEffect(() => {
-        console.log("Searching for:", debouncedSearch)
-    router.get(route("admin.users.index"), { search: debouncedSearch }, {
-        preserveState: true,
-        replace: true,
-    })
-    }, [debouncedSearch])
+    const fetchUsers = useCallback(() => {
+        setIsLoading(true)
+        router.get(
+            route("admin.users.index"),
+            { page, perPage: debouncedPageSize, search: debouncedSearch },
+            {
+            preserveState: true,
+            replace: true,
+            onFinish: () => setIsLoading(false),
+            }
+        )
+        }, [page, debouncedPageSize, debouncedSearch]) // dependency yang dibutuhkan
+
+        useEffect(() => {
+        fetchUsers()
+        }, [fetchUsers])
+
 
     // 2️⃣ useEffect untuk event tag:delete
     useEffect(() => {
@@ -89,40 +164,101 @@ const mergedSearch = debouncedSearch.trim()
     }
     }, []) // kosong artinya hanya dijalankan sekali saat mount
 
+    useEffect(() => {
+        setPage(pageIndex + 1)
+    }, [pageIndex])
+
+    useEffect(() => {
+  setPageIndex(users.meta.current_page - 1)
+  setPage(users.meta.current_page)
+}, [users.meta.current_page])
+const headerContent = useMemo(() => {
+  return (
+    <>
+      <div className="relative w-64">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-10 pr-8"
+        />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+        )}
+      </div>
+
+      {selectedUsers.length > 0 && (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <span>
+                    <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex cursor-pointer">
+                    <Trash />
+                    Bulk Actions
+                    </Button>
+                </span>
+                </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                onClick={() => setDialogMode("bulk-delete")}
+                className="text-red-600 focus:text-red-700"
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Delete selected {selectedUsers.length} ?
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button variant="outline" size="sm" className="h-8" onClick={resetSelection}>
+            Reset Selection
+          </Button>
+        </>
+      )}
+
+      <DataTableViewOptions/>
+      <Link href="/admin/users/create">
+        <Button type="button" variant="default">
+          + Add user
+        </Button>
+      </Link>
+    </>
+  )
+}, [search, isLoading, selectedUsers])
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="List Users" />
 
       <div className="mx-auto py-10 w-full px-8">
-            <DataTable
-            columns={userColumns(mergedSearch)}
-            data={users.data}
-            enableInternalFilter={true}
-            enablePagination
-            columnVisibility={{
-                    created_at: false,
-                    updated_at: false,
-                }}
-            headerContent={
-                <>
-                <div className="relative w-64">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-10"
-                    />
+            {isLoading && (
+                <div className="flex items-center justify-center py-6">
+                <Loader2 className="animate-spin w-5 h-5 mr-2 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Memuat semua data...</span>
                 </div>
-                <DataTableViewOptions />
-                <Link href="/admin/users/create">
-                    <Button type="button" variant="default">+ Add user</Button>
-                </Link>
-                </>
-            }
-            //   onRowSelectionChange={(rows) => setSelectedUser(rows[0] ?? null)}
-            />
+            )}
+            <DataTable
+                columns={userColumns(mergedSearch)}
+                data={users?.data ?? []}
+                enableInternalFilter={true}
+                enablePagination={true}
+                pagination={{
+                    pageIndex,
+                    pageSize,
+                    onPageChange: setPageIndex,
+                    onPageSizeChange: (size) => {
+                    setPageSize(size) // <== Simpan ke localStorage
+                    setPageIndex(0)   // Reset ke halaman pertama
+                        },
+                    pageCount: users.meta.last_page,
+                }}
+                resetRowSelectionSignal={resetSelectionSignal}
+                onRowSelectionChange={(rows) => setSelectedUsers(rows)}
+                tableId={tableKey}
+                onColumnVisibilityChange={setColumnVisibility}
+                columnVisibility={columnVisibility}  
+                headerContent={headerContent}
+                />
       </div>
 
       {/* View Dialog */}
@@ -173,7 +309,7 @@ const mergedSearch = debouncedSearch.trim()
           }
         }}
       />
-      <AlertDialog open={dialogMode === "delete" && openDialog} onOpenChange={handleCloseDialog}>
+    <AlertDialog open={dialogMode === "delete" && openDialog} onOpenChange={handleCloseDialog}>
         <AlertDialogContent>
             <AlertDialogHeader>
             <AlertDialogTitle>Hapus Pengguna?</AlertDialogTitle>
@@ -209,7 +345,44 @@ const mergedSearch = debouncedSearch.trim()
             </Button>
             </AlertDialogFooter>
         </AlertDialogContent>
-        </AlertDialog>
+    </AlertDialog>
+    <AlertDialog
+        open={dialogMode === "bulk-delete"}
+        onOpenChange={handleCloseDialog}
+        >
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Beberapa Pengguna?</AlertDialogTitle>
+            <AlertDialogDescription>
+                Kamu akan menghapus <strong>{selectedUsers.length}</strong> pengguna. Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <Button
+                variant="destructive"
+                onClick={() => {
+                const ids = selectedUsers.map((u) => u.id)
+                router.post(route("admin.users.bulk-delete"), { ids }, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        toast.success("Berhasil menghapus pengguna.")
+                        resetSelection()
+                        handleCloseDialog()
+
+                    },
+                    onError: () => {
+                        toast.error("Gagal menghapus pengguna.")
+                    },
+                })
+                }}
+            >
+                Hapus
+            </Button>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
     </AppLayout>
   )
 }

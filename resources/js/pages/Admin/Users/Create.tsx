@@ -12,8 +12,8 @@ import { useState } from "react"
 import HeadingSmall from "@/components/heading-small"
 
 const breadcrumbs: BreadcrumbItem[] = [
-//   { title: "List User", href: "/admin/users" },
-  { title: "Create User", href: "/admin/users/create" },
+  { title: "Create User", 
+    href: "/admin/users/create" },
 ]
 
 type CreateUserForm = {

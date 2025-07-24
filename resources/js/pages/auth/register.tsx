@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type RegisterForm = {
     name: string;
@@ -15,6 +16,7 @@ type RegisterForm = {
     username?: string; // Optional field for username
     password: string;
     password_confirmation: string;
+    privacy?: boolean;
 };
 
 export default function Register() {
@@ -24,6 +26,8 @@ export default function Register() {
         username: '', // Optional field for username
         password: '',
         password_confirmation: '',
+        privacy: false,
+
     });
 
     const submit: FormEventHandler = (e) => {
@@ -34,12 +38,12 @@ export default function Register() {
     };
 
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
+        <AuthLayout title="Register" description="Masukkan detail Anda di bawah ini untuk membuat akun Anda.">
             <Head title="Register" />
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name" className="text-[13px] font-medium tracking-tight">Nama</Label>
                         <Input
                             id="name"
                             type="text"
@@ -56,7 +60,7 @@ export default function Register() {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="username">Username (optional)</Label>
+                        <Label htmlFor="username" className="text-[13px] font-medium tracking-tight">Username (optional)</Label>
                         <Input
                             id="username"
                             type="text"
@@ -71,7 +75,7 @@ export default function Register() {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
+                        <Label htmlFor="email" className="text-[13px] font-medium tracking-tight">Email address</Label>
                         <Input
                             id="email"
                             type="email"
@@ -86,48 +90,60 @@ export default function Register() {
                         <InputError message={errors.email} />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            required
-                            tabIndex={3}
-                            autoComplete="new-password"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            disabled={processing}
-                            placeholder="Password"
-                        />
-                        <InputError message={errors.password} />
+                    <div className='flex items-center justify-between gap-x-4'>
+                        <div className="grid gap-2">
+                            <Label htmlFor="password" className="text-[13px] font-medium tracking-tight">Password</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                required
+                                tabIndex={3}
+                                autoComplete="new-password"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                disabled={processing}
+                            />
+                            <InputError message={errors.password} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="password_confirmation" className="text-[13px] font-medium tracking-tight">Confirm password</Label>
+                            <Input
+                                id="password_confirmation"
+                                type="password"
+                                required
+                                tabIndex={4}
+                                autoComplete="new-password"
+                                value={data.password_confirmation}
+                                onChange={(e) => setData('password_confirmation', e.target.value)}
+                                disabled={processing}
+                            />
+                            <InputError message={errors.password_confirmation} />
+                        </div>
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">Confirm password</Label>
-                        <Input
-                            id="password_confirmation"
-                            type="password"
-                            required
-                            tabIndex={4}
-                            autoComplete="new-password"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                            disabled={processing}
-                            placeholder="Confirm password"
+                    <div className='flex items-center space-x-2'>
+                        <Checkbox
+                            id="privacy"
+                            name="privacy"
+                            checked={data.privacy}
+                            onClick={() => setData('privacy', !data.privacy)}
+                            tabIndex={3}
                         />
-                        <InputError message={errors.password_confirmation} />
+                        <Label htmlFor="privacy" className="text-[13px] font-medium tracking-tight">
+                            Saya setuju dengan <span className='underline'>Ketentuan</span> dan <span className='underline'>Kebijakan Privasi</span>
+                        </Label>
                     </div>
 
                     <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Create account
+                        Register
                     </Button>
                 </div>
 
-                <div className="text-center text-sm text-muted-foreground">
-                    Already have an account?{' '}
+                <div className="text-center text-[13px] text-muted-foreground">
+                    Sudah daftar?{' '}
                     <TextLink href={route('login')} tabIndex={6}>
-                        Log in
+                        Login
                     </TextLink>
                 </div>
             </form>

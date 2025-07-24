@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TagResource;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,6 +16,11 @@ class TagController extends Controller
 {
     public function index(Request $request): Response
     {
+        // Batasi perPage maksimum
+        $maxPerPage = 100;
+        $perPage = min((int) $request->get('perPage', 10), $maxPerPage);
+        $perPage = $perPage > 0 ? $perPage : 10;
+
         $query = Tag::query()
             ->withCount('articles')
             ->orderBy('articles_count', 'desc');
@@ -26,11 +32,23 @@ class TagController extends Controller
             });
         }
 
+        // Ambil data Server-side pagination
+
+        $tags = $query->paginate($perPage)->appends($request->only(['search', 'perPage']));
+
         return Inertia::render('Admin/Tags/Index', [
             'tags' => [
-                'data' => TagResource::collection(
-                    $query->get()
-                )->toArray($request),
+                'data' => TagResource::collection($tags)->resolve(),
+                'meta' => [
+                    'current_page' => $tags->currentPage(),
+                    'last_page' => $tags->lastPage(),
+                    'per_page' => $tags->perPage(),
+                    'total' => $tags->total(),
+                ],
+                'links' => [
+                    'prev' => $tags->previousPageUrl(),
+                    'next' => $tags->nextPageUrl(),
+                ],
             ],
         ]);
     }
