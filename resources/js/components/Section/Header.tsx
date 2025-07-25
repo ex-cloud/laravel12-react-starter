@@ -180,8 +180,12 @@ export default function AppHeader() {
 
                 <div className="hidden md:block h-5 w-px dark:bg-muted-foreground bg-border"></div>
                 {/* User / Auth */}
-                <div className='hidden lg:flex'>
+                <div className='hidden lg:flex gap-x-1'>
+                    {/* toggle dosktop */}
+                    <AppearanceToggleDropdown />
+
                     {auth?.user ? (
+                        // jika sudah login muncul ini
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" aria-label="User Menu" className='cursor-pointer'>
@@ -212,9 +216,8 @@ export default function AppHeader() {
                             </DropdownMenuContent>
                             </DropdownMenu>
                         ) : (
-
+                            // jika belum login maka tampil ini di dekstop
                             <div className="hidden lg:flex gap-3">
-                                <AppearanceToggleDropdown />
                                 <Button size={'sm'}>
                                     <Link
                                         href={route('login')}
@@ -227,6 +230,8 @@ export default function AppHeader() {
                     )}
                 </div>
                 {/* <div className="block h-5 w-px dark:bg-muted-foreground bg-border"></div> */}
+
+                {/* toggle mobile */}
                 <AppearanceToggleDropdown className='lg:hidden' />
             </div>
         </div>

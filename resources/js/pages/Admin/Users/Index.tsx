@@ -1,8 +1,8 @@
 "use client"
 
 import AppLayout from '@/layouts/app-layout'
-import { Head, Link, usePage, router } from '@inertiajs/react'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Head, usePage, router } from '@inertiajs/react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/data-table'
 import { userColumns } from './user-columns'
@@ -14,12 +14,9 @@ import { ExtractFormFields } from '@/types/utils'
 import { userFields, userToFormData } from './user-fields'
 import AvatarUploader from '@/components/AvatarUploader'
 import { useDebounce } from '@/hooks/use-debounce'
-import { Input } from '@/components/ui/input'
-import { Loader2, Search, Trash } from 'lucide-react'
-import { DataTableViewOptions } from '@/components/data-table/DataTableViewOptions'
+import { Loader2 } from 'lucide-react'
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { toast } from "sonner"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useTablePreferences } from '@/hooks/use-table-preferences'
 
 type Flash = {
@@ -172,59 +169,59 @@ const resetSelection = () => {
   setPageIndex(users.meta.current_page - 1)
   setPage(users.meta.current_page)
 }, [users.meta.current_page])
-const headerContent = useMemo(() => {
-  return (
-    <>
-      <div className="relative w-64">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 pr-8"
-        />
-        {isLoading && (
-          <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-        )}
-      </div>
+// const headerContent = useMemo(() => {
+//   return (
+//     <>
+//       <div className="relative w-64">
+//         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+//         <Input
+//           placeholder="Search"
+//           value={search}
+//           onChange={(e) => setSearch(e.target.value)}
+//           className="pl-10 pr-8"
+//         />
+//         {isLoading && (
+//           <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+//         )}
+//       </div>
 
-      {selectedUsers.length > 0 && (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <span>
-                    <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex cursor-pointer">
-                    <Trash />
-                    Bulk Actions
-                    </Button>
-                </span>
-                </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem
-                onClick={() => setDialogMode("bulk-delete")}
-                className="text-red-600 focus:text-red-700"
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                Delete selected {selectedUsers.length} ?
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+//       {/* {selectedUsers.length > 0 && (
+//         <>
+//           <DropdownMenu>
+//             <DropdownMenuTrigger asChild>
+//                 <span>
+//                     <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex cursor-pointer">
+//                     <Trash />
+//                     Bulk Actions
+//                     </Button>
+//                 </span>
+//                 </DropdownMenuTrigger>
+//             <DropdownMenuContent>
+//               <DropdownMenuItem
+//                 onClick={() => setDialogMode("bulk-delete")}
+//                 className="text-red-600 focus:text-red-700"
+//               >
+//                 <Trash className="mr-2 h-4 w-4" />
+//                 Delete selected {selectedUsers.length} ?
+//               </DropdownMenuItem>
+//             </DropdownMenuContent>
+//           </DropdownMenu>
 
-          <Button variant="outline" size="sm" className="h-8" onClick={resetSelection}>
-            Reset Selection
-          </Button>
-        </>
-      )}
+//           <Button variant="outline" size="sm" className="h-8" onClick={resetSelection}>
+//             Reset Selection
+//           </Button>
+//         </>
+//       )} */}
 
-      <DataTableViewOptions/>
-      <Link href="/admin/users/create">
-        <Button type="button" variant="default">
-          + Add user
-        </Button>
-      </Link>
-    </>
-  )
-}, [search, isLoading, selectedUsers])
+//       <DataTableViewOptions/>
+//       <Link href="/admin/users/create">
+//         <Button type="button" variant="default">
+//           + Add user
+//         </Button>
+//       </Link>
+//     </>
+//   )
+// }, [search, isLoading])
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -242,6 +239,18 @@ const headerContent = useMemo(() => {
                 data={users?.data ?? []}
                 enableInternalFilter={true}
                 enablePagination={true}
+                customToolbar={{
+                    searchValue: search,
+                    onSearchChange: setSearch,
+                    isLoading,
+                    selectedRows: selectedUsers,
+                    onResetSelection: resetSelection,
+                    onBulkDelete: () => setDialogMode("bulk-delete"),
+                    onAddClick: () => router.visit("/admin/users/create"),
+                    addButtonLabel: "Add User",
+                    showSearch: true,
+                    showAddButton: true,
+                }}
                 pagination={{
                     pageIndex,
                     pageSize,
@@ -256,8 +265,7 @@ const headerContent = useMemo(() => {
                 onRowSelectionChange={(rows) => setSelectedUsers(rows)}
                 tableId={tableKey}
                 onColumnVisibilityChange={setColumnVisibility}
-                columnVisibility={columnVisibility}  
-                headerContent={headerContent}
+                columnVisibility={columnVisibility}
                 />
       </div>
 

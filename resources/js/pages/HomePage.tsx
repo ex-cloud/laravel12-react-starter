@@ -13,7 +13,7 @@ export default function HomePage() {
                 />
             </Head>
 
-            <div className="h-[800px] bg-white dark:bg-background text-black dark:text-white flex items-center justify-center px-8 py-20">
+            <div className="h-[850px] bg-white dark:bg-background text-black dark:text-white flex items-center justify-center px-8 py-20">
                 <div className="max-w-screen-2xl w-full px-4 md:px-8 flex flex-col lg:flex-row items-center justify-between gap-2">
                     {/* Kiri - Teks */}
                     <div className="flex-[1.5] space-y-6">

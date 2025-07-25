@@ -14,7 +14,6 @@ import {
   getFilteredRowModel,
   VisibilityState,
   Updater,
-  RowSelectionState,
 } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import {
@@ -28,6 +27,7 @@ import {
 import { DataTablePagination } from "./DataTablePagination"
 import { TableContext } from "./TableContext"
 import { Loader2 } from "lucide-react"
+import { DataTableToolbar } from "./DataTableToolbar"
 
 interface DataTableProps<TData extends { id: number | string }, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -36,6 +36,18 @@ interface DataTableProps<TData extends { id: number | string }, TValue> {
   filterableColumns?: string[]
   enableInternalFilter?: boolean
   enablePagination?: boolean
+  customToolbar?: {
+    showSearch?: boolean
+    searchValue?: string
+    onSearchChange?: (value: string) => void
+    isLoading?: boolean
+    selectedRows?: TData[]
+    onResetSelection?: () => void
+    onBulkDelete?: () => void
+    onAddClick?: () => void
+    addButtonLabel?: string
+    showAddButton?: boolean
+}
   pagination?: {
     pageIndex: number
     pageSize: number
@@ -67,6 +79,7 @@ export function DataTable<TData extends { id: number | string }, TValue>({
   onRowSelectionChange,
   resetRowSelectionSignal = false,
   headerContent,
+  customToolbar,
   pagination,
   onColumnVisibilityChange,
 }: DataTableProps<TData, TValue>) {
@@ -74,9 +87,9 @@ export function DataTable<TData extends { id: number | string }, TValue>({
   return columns.length > 0 ? [{ id: columns[0].id?.toString() ?? "id", desc: false }] : []
 })
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
-  
+
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [selectedRowIds, setSelectedRowIds] = React.useState<Record<string, boolean>>({})
 
   const [visibleRows, setVisibleRows] = React.useState(() => {
     if (!pagination) return 10
@@ -133,13 +146,18 @@ export function DataTable<TData extends { id: number | string }, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: (updater) => {
+        const newSelection = typeof updater === "function"
+            ? updater(selectedRowIds)
+            : updater
+        setSelectedRowIds(newSelection)
+        },
     getRowId: (row) => row.id.toString(),
     onColumnVisibilityChange: onColumnVisibilityChange ?? handleColumnVisibilityChange(setColumnVisibility),
     state: {
       sorting,
       columnFilters,
-      rowSelection,
+      rowSelection: selectedRowIds,
       columnVisibility,
       pagination: pagination
         ? {
@@ -160,19 +178,21 @@ export function DataTable<TData extends { id: number | string }, TValue>({
     const lastSelectedRef = React.useRef<TData[]>([])
 
     React.useEffect(() => {
-    if (onRowSelectionChange) {
-        const selected = table.getFilteredSelectedRowModel().rows.map((r) => r.original)
+        if (!onRowSelectionChange) return
+
+        const selectedRows = data.filter((row) => selectedRowIds[row.id.toString()])
 
         const isEqual =
-        selected.length === lastSelectedRef.current.length &&
-        selected.every((row, i) => row.id === lastSelectedRef.current[i]?.id)
+            selectedRows.length === lastSelectedRef.current.length &&
+            selectedRows.every((row, i) => row.id === lastSelectedRef.current[i]?.id)
 
         if (!isEqual) {
-        lastSelectedRef.current = selected
-        onRowSelectionChange(selected)
+            lastSelectedRef.current = selectedRows
+            onRowSelectionChange(selectedRows)
         }
-    }
-    }, [rowSelection, onRowSelectionChange, table])
+    }, [selectedRowIds, data, onRowSelectionChange])
+
+
 
   return (
     <div>
@@ -195,22 +215,40 @@ export function DataTable<TData extends { id: number | string }, TValue>({
                   ) : null
                 )}
               </div>
-              {headerContent && <div className="flex gap-2">{headerContent}</div>}
+                {headerContent ? (
+                    <div className="flex gap-2">{headerContent}</div>
+                    ) : customToolbar ? (
+                    <DataTableToolbar
+                        searchValue={customToolbar.searchValue}
+                        onSearchChange={customToolbar.onSearchChange}
+                        isLoading={customToolbar.isLoading}
+                        // selectedRows={customToolbar.selectedRows ?? []}
+                        selectedRows={
+                            customToolbar.selectedRows ??
+                            table.getSelectedRowModel().rows.map((r) => r.original)
+                            }
+                        onResetSelection={customToolbar.onResetSelection}
+                        onBulkDelete={customToolbar.onBulkDelete}
+                        onAddClick={customToolbar.onAddClick}
+                        addButtonLabel={customToolbar.addButtonLabel}
+                        showAddButton={customToolbar.showAddButton}
+                        showSearch={customToolbar.showSearch}
+                    />
+                ) : null}
             </div>
           )}
         </div>
       </TableContext.Provider>
 
       <div
-        className="overflow-auto max-h-[70vh] rounded-lg border"
-        ref={tableContainerRef}
+        className="relative max-h-[70vh] overflow-scroll rounded-lg border" ref={tableContainerRef}
       >
         <Table className="min-w-full">
-          <TableHeader className="sticky top-0 z-10 bg-white dark:bg-zinc-900 shadow-md border-b">
+          <TableHeader className="sticky top-0 z-20 bg-white dark:bg-zinc-900 shadow-md border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="bg-white dark:bg-zinc-900">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
