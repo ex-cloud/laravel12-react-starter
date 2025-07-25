@@ -170,9 +170,10 @@ export function DataTable<TData extends { id: number | string }, TValue>({
 
   React.useEffect(() => {
     if (resetRowSelectionSignal) {
-      table.resetRowSelection()
+        table.resetRowSelection()
+        setSelectedRowIds({}) // 🔥 reset juga local state
     }
-  }, [resetRowSelectionSignal, table])
+    }, [resetRowSelectionSignal, table])
 
     // 2️⃣ Hanya trigger row selection saat benar-benar berubah
     const lastSelectedRef = React.useRef<TData[]>([])

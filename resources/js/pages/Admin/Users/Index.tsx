@@ -244,12 +244,15 @@ const resetSelection = () => {
                     onSearchChange: setSearch,
                     isLoading,
                     selectedRows: selectedUsers,
-                    onResetSelection: resetSelection,
+                    // onResetSelection: resetSelection,
                     onBulkDelete: () => setDialogMode("bulk-delete"),
                     onAddClick: () => router.visit("/admin/users/create"),
                     addButtonLabel: "Add User",
                     showSearch: true,
                     showAddButton: true,
+                    onResetSelection: () => {
+                        setResetSelectionSignal((prev) => !prev)
+                    },
                 }}
                 pagination={{
                     pageIndex,
