@@ -1,7 +1,8 @@
+// pages/Admin/Users/UserIndex.tsx
 "use client"
 
 import AppLayout from '@/layouts/app-layout'
-import { Head, usePage, router } from '@inertiajs/react'
+import { Head, router } from '@inertiajs/react'
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/data-table'
@@ -18,6 +19,7 @@ import { Loader2 } from 'lucide-react'
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { toast } from "sonner"
 import { useTablePreferences } from '@/hooks/use-table-preferences'
+import { usePageProps } from '@/hooks/use-page-props'
 
 type Flash = {
   success?: string
@@ -73,16 +75,22 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 
 export default function UsersIndex({ users }: UsersPageProps) {
-  const { flash } = usePage().props as { flash?: Flash }
+    const { auth, flash } = usePageProps<{ flash?: Flash }>()
+    useFlashToast(flash)
+    const canAdd = auth.permissions?.includes("create_user")
+    console.log("permissions:", auth.permissions)
+    console.log("canAdd:", canAdd)
+
   const tableKey = "users"
   const {
     pageSize,
     columnVisibility,
+    sorting,
     setPageSize,
     setColumnVisibility,
+    setSorting,
     } = useTablePreferences(tableKey)
 
-    useFlashToast(flash)
 
     const [resetAvatar, setResetAvatar] = useState(false)
     const [newAvatar, setNewAvatar] = useState<File | null>(null)
@@ -93,8 +101,8 @@ export default function UsersIndex({ users }: UsersPageProps) {
     const [selectedUsers, setSelectedUsers] = useState<User[]>([])
     const [resetSelectionSignal, setResetSelectionSignal] = useState(false)
     const [pageIndex, setPageIndex] = useState(users.meta.current_page - 1)
-    const [page, setPage] = useState(users.meta.current_page)
     const [isLoading, setIsLoading] = useState(false)
+
 
   useUserDialogListener(setSelectedUser, setDialogMode, setOpenDialog)
 
@@ -130,16 +138,24 @@ const resetSelection = () => {
     // 1️⃣ useEffect untuk pencarian
     const fetchUsers = useCallback(() => {
         setIsLoading(true)
-        router.get(
-            route("admin.users.index"),
-            { page, perPage: debouncedPageSize, search: debouncedSearch },
-            {
+
+        const query = {
+            page: pageIndex + 1,
+            perPage: debouncedPageSize,
+            search: debouncedSearch,
+            sort: sorting?.[0]?.id,
+            order: sorting?.[0]?.desc ? "desc" : "asc",
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            format: "d F Y \\p\\u\\k\\u\\l H.i", // opsional
+        }
+
+        router.get(route("admin.users.index"), query, {
             preserveState: true,
             replace: true,
             onFinish: () => setIsLoading(false),
-            }
-        )
-        }, [page, debouncedPageSize, debouncedSearch]) // dependency yang dibutuhkan
+        })
+    }, [pageIndex, debouncedPageSize, debouncedSearch, sorting])
+
 
         useEffect(() => {
         fetchUsers()
@@ -161,67 +177,34 @@ const resetSelection = () => {
     }
     }, []) // kosong artinya hanya dijalankan sekali saat mount
 
-    useEffect(() => {
-        setPage(pageIndex + 1)
-    }, [pageIndex])
 
-    useEffect(() => {
-  setPageIndex(users.meta.current_page - 1)
-  setPage(users.meta.current_page)
-}, [users.meta.current_page])
-// const headerContent = useMemo(() => {
-//   return (
-//     <>
-//       <div className="relative w-64">
-//         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-//         <Input
-//           placeholder="Search"
-//           value={search}
-//           onChange={(e) => setSearch(e.target.value)}
-//           className="pl-10 pr-8"
-//         />
-//         {isLoading && (
-//           <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-//         )}
-//       </div>
+const handleExportCSV = () => {
+  const exportData = selectedUsers.length ? selectedUsers : users.data
 
-//       {/* {selectedUsers.length > 0 && (
-//         <>
-//           <DropdownMenu>
-//             <DropdownMenuTrigger asChild>
-//                 <span>
-//                     <Button variant="outline" size="sm" className="ml-auto hidden h-8 lg:flex cursor-pointer">
-//                     <Trash />
-//                     Bulk Actions
-//                     </Button>
-//                 </span>
-//                 </DropdownMenuTrigger>
-//             <DropdownMenuContent>
-//               <DropdownMenuItem
-//                 onClick={() => setDialogMode("bulk-delete")}
-//                 className="text-red-600 focus:text-red-700"
-//               >
-//                 <Trash className="mr-2 h-4 w-4" />
-//                 Delete selected {selectedUsers.length} ?
-//               </DropdownMenuItem>
-//             </DropdownMenuContent>
-//           </DropdownMenu>
+  if (!exportData.length) {
+    toast.warning("Tidak ada data untuk diekspor.")
+    return
+  }
 
-//           <Button variant="outline" size="sm" className="h-8" onClick={resetSelection}>
-//             Reset Selection
-//           </Button>
-//         </>
-//       )} */}
+  const csvContent = [
+    Object.keys(exportData[0])
+      .filter((key) => key !== "avatar")
+      .join(","),
+    ...exportData.map((user) =>
+      Object.values(user)
+        .filter((_, i) => Object.keys(user)[i] !== "avatar")
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(",")
+    ),
+  ].join("\n")
 
-//       <DataTableViewOptions/>
-//       <Link href="/admin/users/create">
-//         <Button type="button" variant="default">
-//           + Add user
-//         </Button>
-//       </Link>
-//     </>
-//   )
-// }, [search, isLoading])
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.setAttribute("href", url)
+  link.setAttribute("download", `users-export-${Date.now()}.csv`)
+  link.click()
+}
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -234,11 +217,14 @@ const resetSelection = () => {
                 <span className="text-sm text-muted-foreground">Memuat semua data...</span>
                 </div>
             )}
+
             <DataTable
                 columns={userColumns(mergedSearch)}
                 data={users?.data ?? []}
                 enableInternalFilter={true}
                 enablePagination={true}
+                sorting={sorting}
+                onSortingChange={setSorting}
                 customToolbar={{
                     searchValue: search,
                     onSearchChange: setSearch,
@@ -250,6 +236,8 @@ const resetSelection = () => {
                     addButtonLabel: "Add User",
                     showSearch: true,
                     showAddButton: true,
+                    onExportCSV: handleExportCSV, // ✅ tambahan
+                    canAdd: auth.permissions?.includes("create_user"),
                     onResetSelection: () => {
                         setResetSelectionSignal((prev) => !prev)
                     },

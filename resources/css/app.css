@@ -222,3 +222,27 @@
     @apply bg-background text-foreground;
     }
 }
+
+/* Resizer styles for TanStack Table */
+.resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  cursor: col-resize;
+  z-index: 10;
+  user-select: none;
+  touch-action: none;
+  transform: translateX(50%);
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.group:hover .resizer {
+  background-color: rgba(255, 255, 255, 0.15); /* or `theme('colors.muted')` */
+}
+
+.isResizing {
+  background-color: #f7990e;
+}

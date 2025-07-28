@@ -3,40 +3,46 @@
 
 import * as React from "react"
 import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  SortingState,
-  getSortedRowModel,
-  ColumnFiltersState,
-  getFilteredRowModel,
-  VisibilityState,
-  Updater,
+ColumnDef,
+flexRender,
+getCoreRowModel,
+useReactTable,
+getPaginationRowModel,
+SortingState,
+getSortedRowModel,
+ColumnFiltersState,
+getFilteredRowModel,
+VisibilityState,
+Updater,
+OnChangeFn,
 } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+Table,
+TableBody,
+TableCell,
+TableHead,
+TableHeader,
+TableRow,
 } from "@/components/ui/table"
 import { DataTablePagination } from "./DataTablePagination"
 import { TableContext } from "./TableContext"
-import { Loader2 } from "lucide-react"
+import { Loader2, Tally2 } from "lucide-react"
 import { DataTableToolbar } from "./DataTableToolbar"
+import { useTablePreferences } from "@/hooks/use-table-preferences"
+import { cn } from "@/lib/utils"
+import { getColumnWidthClass } from "@/utils/table-helpers"
 
 interface DataTableProps<TData extends { id: number | string }, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  tableId?: string
-  filterableColumns?: string[]
-  enableInternalFilter?: boolean
-  enablePagination?: boolean
-  customToolbar?: {
+columns: ColumnDef<TData, TValue>[]
+data: TData[]
+tableId?: string
+filterableColumns?: string[]
+enableInternalFilter?: boolean
+enablePagination?: boolean
+    sorting?: SortingState
+    onSortingChange?: OnChangeFn<SortingState>
+customToolbar?: {
     showSearch?: boolean
     searchValue?: string
     onSearchChange?: (value: string) => void
@@ -47,105 +53,135 @@ interface DataTableProps<TData extends { id: number | string }, TValue> {
     onAddClick?: () => void
     addButtonLabel?: string
     showAddButton?: boolean
+    onExportCSV?: () => void
+    canAdd?: boolean
 }
-  pagination?: {
+pagination?: {
     pageIndex: number
     pageSize: number
     onPageChange: (pageIndex: number) => void
     onPageSizeChange: (size: number) => void
     pageCount: number
-  }
-  resetRowSelectionSignal?: boolean
-  onRowSelectionChange?: (selectedRows: TData[]) => void
-  headerContent?: React.ReactNode
-  onColumnVisibilityChange?: (updater: Updater<VisibilityState>) => void
-  columnVisibility?: VisibilityState
+}
+resetRowSelectionSignal?: boolean
+onRowSelectionChange?: (selectedRows: TData[]) => void
+headerContent?: React.ReactNode
+onColumnVisibilityChange?: (updater: Updater<VisibilityState>) => void
+columnVisibility?: VisibilityState
 }
 
-const handleColumnVisibilityChange = (
-  set: React.Dispatch<React.SetStateAction<VisibilityState>>
-) =>
-  (updater: Updater<VisibilityState>) =>
-    set((prev) =>
-      typeof updater === "function" ? updater(prev) : updater
-    )
+    export const defaultColumnSizing = {
+        size: 160,
+        minSize: 80,
+        maxSize: 360,
+        firstColumnSize: 40
+    }
 
 export function DataTable<TData extends { id: number | string }, TValue>({
-  columns,
-  data,
-  filterableColumns = [],
-  enableInternalFilter = true,
-  enablePagination = true,
-  onRowSelectionChange,
-  resetRowSelectionSignal = false,
-  headerContent,
-  customToolbar,
-  pagination,
-  onColumnVisibilityChange,
+columns,
+data,
+sorting, // ✅ Ini sudah di-destructure
+onSortingChange, // ✅ Ini juga
+filterableColumns = [],
+enableInternalFilter = true,
+enablePagination = true,
+onRowSelectionChange,
+resetRowSelectionSignal = false,
+headerContent,
+customToolbar,
+pagination,
+tableId,
+//   defaultSorting,
+onColumnVisibilityChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>(() => {
-  return columns.length > 0 ? [{ id: columns[0].id?.toString() ?? "id", desc: false }] : []
-})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
 
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [selectedRowIds, setSelectedRowIds] = React.useState<Record<string, boolean>>({})
+    const {
+    columnVisibility,
+    setColumnVisibility,
+    sorting: savedSorting,
+    setColumnSizing,
+    columnSizing,
+    setPageSize,
+    // setColumnVisibility,
+    } = useTablePreferences(tableId ?? "default")
 
-  const [visibleRows, setVisibleRows] = React.useState(() => {
+    const [internalSorting, setInternalSorting] = React.useState<SortingState>(
+savedSorting.length ? savedSorting : [{ id: 'created_at', desc: true }]
+)
+
+
+    const sortingState = sorting ?? internalSorting
+    const handleSortingChange: OnChangeFn<SortingState> =
+        onSortingChange ??
+        ((updaterOrValue) => {
+            setInternalSorting((prev) =>
+            typeof updaterOrValue === "function"
+                ? updaterOrValue(prev)
+                : updaterOrValue
+            )
+        })
+
+const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+
+//   const [columnVisibility, setColumnVisibilityState] = React.useState<VisibilityState>(savedVisibility)
+
+const [selectedRowIds, setSelectedRowIds] = React.useState<Record<string, boolean>>({})
+
+const [visibleRows, setVisibleRows] = React.useState(() => {
     if (!pagination) return 10
     return data.length
-  })
-  const [isFetchingMore, setIsFetchingMore] = React.useState(false)
-  const tableContainerRef = React.useRef<HTMLDivElement>(null)
+})
+const [isFetchingMore, setIsFetchingMore] = React.useState(false)
+const tableContainerRef = React.useRef<HTMLDivElement>(null)
 
-  React.useEffect(() => {
+React.useEffect(() => {
     if (!pagination) {
-      setVisibleRows(10)
-      requestAnimationFrame(() => {
+    setVisibleRows(10)
+    requestAnimationFrame(() => {
         if (tableContainerRef.current) {
-          tableContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+        tableContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' })
         }
-      })
+    })
     }
 
     const handleScroll = () => {
-      const container = tableContainerRef.current
-      if (!container) return
+    const container = tableContainerRef.current
+    if (!container) return
 
-      const { scrollTop, scrollHeight, clientHeight } = container
-      const nearBottom = scrollTop + clientHeight >= scrollHeight - 50
+    const { scrollTop, scrollHeight, clientHeight } = container
+    const nearBottom = scrollTop + clientHeight >= scrollHeight - 50
 
-      if (nearBottom && !isFetchingMore && visibleRows < data.length) {
+    if (nearBottom && !isFetchingMore && visibleRows < data.length) {
         setIsFetchingMore(true)
         setTimeout(() => {
-          setVisibleRows((prev) => Math.min(prev + 20, data.length))
-          setIsFetchingMore(false)
+        setVisibleRows((prev) => Math.min(prev + 20, data.length))
+        setIsFetchingMore(false)
         }, 800)
-      }
+    }
     }
 
     const container = tableContainerRef.current
     container?.addEventListener("scroll", handleScroll)
     return () => container?.removeEventListener("scroll", handleScroll)
-  }, [isFetchingMore, visibleRows, data.length, pagination])
+}, [isFetchingMore, visibleRows, data.length, pagination])
 
-  React.useEffect(() => {
+React.useEffect(() => {
     if (pagination) {
-      setVisibleRows(data.length)
+    setVisibleRows(data.length)
     }
-  }, [pagination, data.length])
+}, [pagination, data.length])
 
-  const table = useReactTable({
+const table = useReactTable({
     data: !pagination ? data.slice(0, visibleRows) : data,
     columns,
     manualPagination: !!pagination,
     pageCount: pagination?.pageCount,
-    getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: onColumnVisibilityChange ?? setColumnVisibility,
     onRowSelectionChange: (updater) => {
         const newSelection = typeof updater === "function"
             ? updater(selectedRowIds)
@@ -153,22 +189,36 @@ export function DataTable<TData extends { id: number | string }, TValue>({
         setSelectedRowIds(newSelection)
         },
     getRowId: (row) => row.id.toString(),
-    onColumnVisibilityChange: onColumnVisibilityChange ?? handleColumnVisibilityChange(setColumnVisibility),
+    // onColumnVisibilityChange: onColumnVisibilityChange ?? handleColumnVisibilityChange(setColumnVisibilityState),
+
+    initialState: {
+    columnSizing,
+    sorting: sortingState,
+    },
     state: {
-      sorting,
-      columnFilters,
-      rowSelection: selectedRowIds,
-      columnVisibility,
-      pagination: pagination
+        columnVisibility,
+        columnFilters,
+        columnSizing,
+        rowSelection: selectedRowIds,
+        pagination: pagination
         ? {
             pageIndex: pagination.pageIndex,
             pageSize: pagination.pageSize,
-          }
+            }
         : undefined,
     },
-  })
+    defaultColumn: {
+        ...defaultColumnSizing,
+        enableResizing: true,
+        enableHiding: true,
+    },
+    onColumnSizingChange: setColumnSizing, // ← wajib
+    columnResizeMode: 'onChange', // bisa juga 'onEnd'
+    enableColumnResizing: true, // ← penting
+    getCoreRowModel: getCoreRowModel(),
+})
 
-  React.useEffect(() => {
+React.useEffect(() => {
     if (resetRowSelectionSignal) {
         table.resetRowSelection()
         setSelectedRowIds({}) // 🔥 reset juga local state
@@ -194,32 +244,32 @@ export function DataTable<TData extends { id: number | string }, TValue>({
     }, [selectedRowIds, data, onRowSelectionChange])
 
 
-
-  return (
+return (
     <div>
-      <TableContext.Provider value={table}>
+    <TableContext.Provider value={table}>
         <div>
-          {enableInternalFilter && (
-            <div className="flex flex-wrap justify-between items-start py-4 gap-4">
-              <div className="flex flex-wrap gap-2">
+        {enableInternalFilter && (
+            <div className="space-y-2 py-4">
+            {/* Filter kolom tetap */}
+            <div className="flex flex-wrap gap-2">
                 {filterableColumns.map((col) =>
-                  table.getColumn(col) ? (
+                table.getColumn(col) ? (
                     <Input
-                      key={col}
-                      placeholder={`Filter ${col}...`}
-                      value={(table.getColumn(col)?.getFilterValue() as string) ?? ""}
-                      onChange={(event) =>
+                    key={col}
+                    placeholder={`Filter ${col}...`}
+                    value={(table.getColumn(col)?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
                         table.getColumn(col)?.setFilterValue(event.target.value)
-                      }
-                      className="max-w-sm"
+                    }
+                    className="max-w-sm"
                     />
-                  ) : null
+                ) : null
                 )}
-              </div>
-                {headerContent ? (
-                    <div className="flex gap-2">{headerContent}</div>
-                    ) : customToolbar ? (
+            </div>
+                {headerContent && <div className="flex gap-2">{headerContent}</div>}
+                    {!headerContent && customToolbar && (
                     <DataTableToolbar
+                        tableId={tableId ?? "default"}
                         searchValue={customToolbar.searchValue}
                         onSearchChange={customToolbar.onSearchChange}
                         isLoading={customToolbar.isLoading}
@@ -232,87 +282,140 @@ export function DataTable<TData extends { id: number | string }, TValue>({
                         onBulkDelete={customToolbar.onBulkDelete}
                         onAddClick={customToolbar.onAddClick}
                         addButtonLabel={customToolbar.addButtonLabel}
-                        showAddButton={customToolbar.showAddButton}
                         showSearch={customToolbar.showSearch}
+                        onExportCSV={customToolbar.onExportCSV}
+                        canAdd={customToolbar.canAdd}
+                        showAddButton={customToolbar.showAddButton}
                     />
-                ) : null}
+                )}
             </div>
-          )}
+        )}
         </div>
-      </TableContext.Provider>
+    </TableContext.Provider>
 
-      <div
+    <div
         className="relative max-h-[70vh] overflow-scroll rounded-lg border" ref={tableContainerRef}
-      >
-        <Table className="min-w-full">
-          <TableHeader className="sticky top-0 z-20 bg-white dark:bg-zinc-900 shadow-md border-b">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-white dark:bg-zinc-900">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
+    >
+        <Table className="min-w-full border-collapse table-auto">
+            <TableHeader className="sticky top-0 z-20 bg-white dark:bg-zinc-900 shadow border-b">
+                {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header, index) => {
+                        const isFirstColumn = index === 0; // Menentukan apakah ini kolom pertama
 
-          <TableBody>
+                        return (
+                        <TableHead
+                            key={header.id}
+                            className={cn(
+                            "relative group bg-white dark:bg-zinc-900 px-2",
+                            isFirstColumn ? "w-12" : "",
+                            getColumnWidthClass(header.column) // Menambahkan kelas lebar kolom
+                            )}
+                            style={{ width: header.getSize() }}
+                        >
+                            {!header.isPlaceholder && (
+                            <div className="flex items-center justify-between pr-2">
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+
+                                {header.column.getCanResize() && (
+                                <div
+                                    onPointerDown={header.getResizeHandler()}
+                                    onDoubleClick={() => header.column.resetSize()}
+                                    className={cn(
+                                    "absolute right-0 top-0 h-full w-4 flex items-center justify-center cursor-col-resize group",
+                                    header.column.getIsResizing() && "bg-muted"
+                                    )}
+                                >
+                                    <Tally2
+                                    aria-label="Resize column"
+                                    role="img"
+                                    className={cn(
+                                        "w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity",
+                                        header.column.getIsResizing() && "opacity-100 text-primary"
+                                    )}
+                                    >
+                                    <title>Resize column</title>
+                                    </Tally2>
+                                </div>
+                                )}
+                            </div>
+                            )}
+                        </TableHead>
+                        );
+                    })}
+                    </TableRow>
+                ))}
+                </TableHeader>
+
+
+        <TableBody>
             {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
+            table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+                    {row.getVisibleCells().map((cell, index) => {
+                    const isFirstColumn = index === 0; // Mengecek apakah kolom ini adalah kolom pertama
+
+                    return (
+                        <TableCell
+                        key={cell.id}
+                        style={{ width: cell.column.getSize() }}
+                        className={cn(
+                            isFirstColumn ? "w-12 flex items-center gap-2" : "",
+                            getColumnWidthClass(cell.column) // Menambahkan kelas lebar kolom
+                        )}
+                        >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                    );
+                    })}
                 </TableRow>
-              ))
+            ))
             ) : (
-              <TableRow>
+            <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Tidak ada data.
+                Tidak ada data.
                 </TableCell>
-              </TableRow>
+            </TableRow>
             )}
-          </TableBody>
+        </TableBody>
         </Table>
 
         {!pagination && visibleRows < data.length && isFetchingMore && (
-          <tfoot>
+        <tfoot>
             <tr>
-              <td colSpan={columns.length}>
+            <td colSpan={columns.length}>
                 <div className="w-full h-12 shimmer-row flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span className="text-sm text-muted-foreground">Memuat data tambahan...</span>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <span className="text-sm text-muted-foreground">Memuat data tambahan...</span>
                 </div>
-              </td>
+            </td>
             </tr>
-          </tfoot>
+        </tfoot>
         )}
-      </div>
-
-      {enablePagination && (
-        <div className="py-4">
-          <DataTablePagination
-            {...(pagination
-              ? {
-                  pageIndex: pagination.pageIndex,
-                  pageCount: pagination.pageCount,
-                  pageSize: pagination.pageSize,
-                  onPageChange: pagination.onPageChange,
-                  onPageSizeChange: pagination.onPageSizeChange,
-                  selectedCount: table.getFilteredSelectedRowModel().rows.length,
-                  totalCount: table.getRowModel().rows.length,
-                }
-              : {
-                  table,
-                })}
-          />
-        </div>
-      )}
     </div>
-  )
+
+    {enablePagination && (
+        <div className="py-4">
+        <DataTablePagination
+            {...(pagination
+            ? {
+                pageIndex: pagination.pageIndex,
+                pageCount: pagination.pageCount,
+                pageSize: pagination.pageSize,
+                onPageChange: pagination.onPageChange,
+                onPageSizeChange: (size) => {
+                    pagination.onPageSizeChange(size)
+                    setPageSize(size) // ✅ simpan ke preferensi
+                    },
+                selectedCount: table.getFilteredSelectedRowModel().rows.length,
+                totalCount: table.getRowModel().rows.length,
+                }
+            : {
+                table,
+                })}
+        />
+        </div>
+    )}
+    </div>
+)
 }

@@ -41,8 +41,16 @@ final class UserController extends Controller
             });
         }
 
+        // ✅ Sorting (new)
+        $sort = $request->get('sort', 'created_at');
+        $order = $request->get('order', 'desc');
+        $allowedSorts = ['name', 'username', 'email', 'created_at', 'updated_at'];
+        if (in_array($sort, $allowedSorts)) {
+            $query->orderBy($sort, $order === 'asc' ? 'asc' : 'desc');
+        }
+
         // Ambil data Server-side pagination
-        $users = $query->paginate($perPage)->appends($request->only(['search', 'perPage']));
+        $users = $query->paginate($perPage)->appends($request->only(['search', 'perPage', 'sort', 'order']));
 
         // Return ke Inertia
         return Inertia::render('Admin/Users/Index', [

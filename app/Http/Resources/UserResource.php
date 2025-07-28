@@ -30,8 +30,8 @@ final class UserResource extends JsonResource
 
             'profile' => $this->whenLoaded('profile', fn() => (new ProfileResource($this->resource->profile))->toArray($request)),
 
-            'created_at' => $this->resource->created_at?->format('Y-m-d H:i:s'), // atau tetap raw
-            'updated_at' => $this->resource->updated_at?->format('Y-m-d H:i:s'),
+            'created_at' => $this->resource->getCreatedAtResource(),
+            'updated_at' => $this->resource->getUpdatedAtResource(),
         ];
     }
 }

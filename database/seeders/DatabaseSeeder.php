@@ -13,7 +13,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-       User::factory()->create([
+        // 1. Panggil RoleSeeder dulu, agar role dan permission tersedia
+        $this->call([
+            RoleSeeder::class,
+            TagSeeder::class,
+            CategorySeeder::class,
+            ArticleSeeder::class,
+            MenuSeeder::class
+        ]);
+
+        // 2. Buat user admin
+        $user = User::factory()->create([
             'name' => 'Andiansyah',
             'username' => 'andiansyah',
             'email' => 'andiansyah@kdua.net',
@@ -21,7 +31,7 @@ class DatabaseSeeder extends Seeder
             'avatar' => '/assets/default.jpg',
         ]);
 
-        $user = User::first();
+        // 3. Buat profil user
         Profile::create([
             'user_id' => $user->id,
             'birthdate' => '1995-01-30',
@@ -31,12 +41,10 @@ class DatabaseSeeder extends Seeder
             'address' => 'Jl. Sukarajin 2 lemahneundeut 2',
         ]);
 
+        // 4. Assign role setelah role tersedia
+        $user->assignRole('admin');
+
+        // 5. Generate user dummy
         User::factory(100)->create();
-        $this->call([
-            TagSeeder::class,
-            CategorySeeder::class,
-            ArticleSeeder::class,
-            MenuSeeder::class
-        ]);
     }
 }
