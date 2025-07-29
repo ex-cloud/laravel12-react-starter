@@ -17,13 +17,24 @@ import { useTable } from "./TableContext"
 import { useTablePreferences } from "@/hooks/use-table-preferences"
 import { useDebounce } from "@/hooks/use-debounce"
 
+interface BulkDeletePayload {
+    selectAll: boolean
+    selectedIds: string[]
+    activeSearch?: string
+    filters?: {
+        search?: string
+        status?: string
+        role?: string
+    }
+}
+
 interface DataTableToolbarProps<TData> {
   searchValue?: string
   onSearchChange?: (value: string) => void
   isLoading?: boolean
   selectedRows?: TData[]
   onResetSelection?: () => void
-  onBulkDelete?: () => void
+  onBulkDelete?: (payload: BulkDeletePayload) => void
   onExportCSV?: () => void
   onAddClick?: () => void
   addButtonLabel?: string
@@ -31,35 +42,35 @@ interface DataTableToolbarProps<TData> {
   showAddButton?: boolean
   canAdd?: boolean
   tableId: string
+  totalCount: number
+  selectAllAcrossPages?: boolean
+  setSelectAllAcrossPages?: (value: boolean) => void
+  onSelectAllIds?: (allIds: string[]) => void;
 }
 
 export function DataTableToolbar<TData extends { id: number | string }>({
-  searchValue = "",
-  onSearchChange,
-  isLoading = false,
-  selectedRows = [],
-  onResetSelection,
-  onBulkDelete,
-  onExportCSV,
-  onAddClick,
-  addButtonLabel = "Add",
-  showSearch = true,
-  showAddButton = true,
-  canAdd = true,
-  tableId
+    searchValue = "",
+    onSearchChange,
+    isLoading = false,
+    selectedRows = [],
+    onBulkDelete,
+    onExportCSV,
+    onAddClick,
+    addButtonLabel = "Add",
+    showSearch = true,
+    showAddButton = true,
+    canAdd = true,
+    tableId,
+    totalCount,
+    selectAllAcrossPages,
+    setSelectAllAcrossPages,
+    onSelectAllIds,
 }: DataTableToolbarProps<TData>) {
   const table = useTable<TData>()
   const { resetPreferences } = useTablePreferences(tableId)
 
   const [inputValue, setInputValue] = useState(searchValue)
   const debouncedSearch = useDebounce(inputValue, 300)
-  const handleResetSelection = () => {
-        if (onResetSelection) {
-            onResetSelection()
-        } else {
-            table.resetRowSelection()
-        }
-    }
 
 
   useEffect(() => {
@@ -71,7 +82,18 @@ export function DataTableToolbar<TData extends { id: number | string }>({
       col.getCanHide() && col.id !== "select" && col.id !== "actions"
     ), [table])
 
-  const allColumnsVisible = hideableColumns.every((col) => col.getIsVisible())
+    const allColumnsVisible = hideableColumns.every((col) => col.getIsVisible())
+    const allSelected = selectAllAcrossPages ?? false
+    const updateSelectAllAcrossPages = setSelectAllAcrossPages ?? (() => {})
+
+    const rowSelection = table.getState().rowSelection
+
+    useEffect(() => {
+    if (selectAllAcrossPages && Object.keys(rowSelection).length !== totalCount) {
+        setSelectAllAcrossPages?.(false)
+    }
+    }, [rowSelection, selectAllAcrossPages, totalCount, setSelectAllAcrossPages])
+
 
   return (
   <>
@@ -115,12 +137,19 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                         </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
                                 <DropdownMenuItem
-                                onClick={onBulkDelete}
-                                className="text-red-600 focus:text-red-700"
-                                >
-                                <Trash className="mr-2 h-4 w-4" />
-                                Delete selected ({selectedRows.length})
+                                    onClick={() => {
+                                        onBulkDelete?.({
+                                        selectAll: allSelected,
+                                        selectedIds: allSelected ? [] : Object.keys(table.getState().rowSelection),
+                                        activeSearch: debouncedSearch,
+                                        })
+                                    }}
+                                    className="text-red-600 focus:text-red-700"
+                                    >
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Delete selected ({allSelected ? totalCount : selectedRows.length})
                                 </DropdownMenuItem>
+
                                 {onExportCSV && (
                                 <DropdownMenuItem onClick={onExportCSV}>
                                     <FileDown className="mr-2 h-4 w-4" />
@@ -231,20 +260,47 @@ export function DataTableToolbar<TData extends { id: number | string }>({
             </div>
     </div>
 
-    {Object.keys(table.getState().rowSelection).length > 0 && (
+    {(Object.keys(table.getState().rowSelection).length > 0 || allSelected) && (
         <div className="flex justify-between items-center bg-muted/50 dark:bg-transparent border border-border p-2 rounded-md">
             <span className="text-xs text-muted-foreground">
-                {Object.keys(table.getState().rowSelection).length} records selected
+            {allSelected
+                ? `All ${totalCount} records selected across all pages`
+                : `${Object.keys(table.getState().rowSelection).length} records selected`}
             </span>
+
+            <div className="flex items-center gap-2 text-xs">
+            {!allSelected && (
+                <button
+                className="underline text-primary"
+                onClick={() => {
+                    updateSelectAllAcrossPages(true);
+
+                    // Ambil semua ID dari data table (pastikan table.options.data berisi data yang lengkap!)
+                    const allIds = table.options.data.map((row) => row.id.toString());
+
+                    // Trigger callback dari parent
+                    if (typeof onSelectAllIds === "function") {
+                      onSelectAllIds(allIds);
+                    }
+                  }}
+                >
+                Select all {totalCount} rows
+                </button>
+            )}
             <div
-                onClick={handleResetSelection}
-                className="text-xs cursor-pointer flex items-center gap-1"
+                onClick={() => {
+                table.resetRowSelection()
+                updateSelectAllAcrossPages(false)
+                }}
+                className="cursor-pointer flex items-center gap-1 text-muted-foreground hover:text-foreground"
             >
-                <RotateCcw className="mr-1 h-3 w-3" />
+                <RotateCcw className="h-3 w-3" />
                 Deselect all
+            </div>
             </div>
         </div>
     )}
+
 
     {/* Active filters badge */}
     {inputValue && (

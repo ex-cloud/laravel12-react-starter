@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BulkDeleteRequest;
 use App\Http\Requests\Admin\UserStoreRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
 use App\Http\Resources\UserResource;
@@ -67,6 +68,7 @@ final class UserController extends Controller
                     'next' => $users->nextPageUrl(),
                 ],
             ],
+            'totalCount' => $users->total(),
         ]);
     }
 
@@ -190,11 +192,28 @@ final class UserController extends Controller
         ]);
     }
 
-    public function bulkDelete(Request $request): RedirectResponse
+    public function bulkDelete(BulkDeleteRequest $request): RedirectResponse
     {
-        $ids = $request->input('ids', []);
-        User::whereIn('id', $ids)->delete();
+        $selectAll = $request->boolean('selectAll');
+        $selectedIds = $request->input('selectedIds', []);
+        $search = $request->input('activeSearch');
+        $deleted = 0;
 
-        return back()->with('success', count($ids) . ' pengguna berhasil dihapus.');
+        if ($selectAll) {
+            $query = User::query();
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            $deleted = $query->delete();
+        } else {
+            $deleted = User::whereIn('id', $selectedIds)->delete();
+        }
+
+        return back()->with('success', "{$deleted} pengguna berhasil dihapus.");
     }
 }

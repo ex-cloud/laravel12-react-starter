@@ -44,6 +44,7 @@ type UsersPageProps = {
       prev?: string
     }
   }
+  totalCount: number
 }
 
 export function useFlashToast(flash?: Flash) {
@@ -102,6 +103,7 @@ export default function UsersIndex({ users }: UsersPageProps) {
     const [resetSelectionSignal, setResetSelectionSignal] = useState(false)
     const [pageIndex, setPageIndex] = useState(users.meta.current_page - 1)
     const [isLoading, setIsLoading] = useState(false)
+    const [selectAllAcrossPages, setSelectAllAcrossPages] = useState(false)
 
 
   useUserDialogListener(setSelectedUser, setDialogMode, setOpenDialog)
@@ -164,18 +166,18 @@ const resetSelection = () => {
 
     // 2️⃣ useEffect untuk event tag:delete
     useEffect(() => {
-    const handleDelete = (e: CustomEvent<User>) => {
-        setSelectedUser(e.detail)
-        setDialogMode("delete")
-        setOpenDialog(true)
-    }
+        const handleDelete = (e: CustomEvent<User>) => {
+            setSelectedUser(e.detail)
+            setDialogMode("delete")
+            setOpenDialog(true)
+        }
 
-    window.addEventListener("user:delete", handleDelete as EventListener)
+        window.addEventListener("user:delete", handleDelete as EventListener)
 
-    return () => {
-        window.removeEventListener("user:delete", handleDelete as EventListener)
-    }
-    }, []) // kosong artinya hanya dijalankan sekali saat mount
+        return () => {
+            window.removeEventListener("user:delete", handleDelete as EventListener)
+        }
+        }, []) // kosong artinya hanya dijalankan sekali saat mount
 
 
 const handleExportCSV = () => {
@@ -205,6 +207,7 @@ const handleExportCSV = () => {
   link.setAttribute("download", `users-export-${Date.now()}.csv`)
   link.click()
 }
+const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -231,11 +234,23 @@ const handleExportCSV = () => {
                     isLoading,
                     selectedRows: selectedUsers,
                     // onResetSelection: resetSelection,
-                    onBulkDelete: () => setDialogMode("bulk-delete"),
+                    onBulkDelete: ({ selectAll, selectedIds, activeSearch }) => {
+                        const message = selectAll
+                            ? `Semua ${users.meta.total} pengguna akan dihapus${
+                                activeSearch ? ` berdasarkan pencarian: "${activeSearch}"` : ""
+                            }.`
+                            : `${selectedIds.length} pengguna akan dihapus.`
+
+                        setBulkDeleteMessage(message)
+                        setDialogMode("bulk-delete")
+                        setOpenDialog(true)
+                        },
                     onAddClick: () => router.visit("/admin/users/create"),
                     addButtonLabel: "Add User",
                     showSearch: true,
                     showAddButton: true,
+                    selectAllAcrossPages,
+                    setSelectAllAcrossPages,
                     onExportCSV: handleExportCSV, // ✅ tambahan
                     canAdd: auth.permissions?.includes("create_user"),
                     onResetSelection: () => {
@@ -257,7 +272,8 @@ const handleExportCSV = () => {
                 tableId={tableKey}
                 onColumnVisibilityChange={setColumnVisibility}
                 columnVisibility={columnVisibility}
-                />
+                totalCount={users.meta.total}
+            />
       </div>
 
       {/* View Dialog */}
@@ -329,11 +345,14 @@ const handleExportCSV = () => {
                     router.delete(route("admin.users.destroy", selectedUser.id), {
                         onSuccess: () => {
                         setIsDeleting(false)
+                        resetSelection()
                         handleCloseDialog()
                         },
                         onError: () => {
-                        setIsDeleting(false)
-                        handleCloseDialog()
+                            toast.error("Gagal menghapus pengguna.")
+                            },
+                        onFinish: () => {
+                            setIsDeleting(false) // <- PENTING agar loading state kembali ke normal
                         },
                     })
                     }
@@ -346,37 +365,54 @@ const handleExportCSV = () => {
         </AlertDialogContent>
     </AlertDialog>
     <AlertDialog
-        open={dialogMode === "bulk-delete"}
+        open={dialogMode === "bulk-delete" && openDialog }
         onOpenChange={handleCloseDialog}
         >
         <AlertDialogContent>
             <AlertDialogHeader>
             <AlertDialogTitle>Hapus Beberapa Pengguna?</AlertDialogTitle>
             <AlertDialogDescription>
-                Kamu akan menghapus <strong>{selectedUsers.length}</strong> pengguna. Tindakan ini tidak dapat dibatalkan.
+                {/* Kamu akan menghapus <strong>{selectedUsers.length}</strong> pengguna. Tindakan ini tidak dapat dibatalkan. */}
+                {bulkDeleteMessage}
             </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCloseDialog}>Batal</AlertDialogCancel>
             <Button
+                type="button"
                 variant="destructive"
+                disabled={isDeleting}
+                className="bg-rose-600 hover:bg-rose-700 text-white justify-center"
                 onClick={() => {
-                const ids = selectedUsers.map((u) => u.id)
-                router.post(route("admin.users.bulk-delete"), { ids }, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        toast.success("Berhasil menghapus pengguna.")
-                        resetSelection()
-                        handleCloseDialog()
+                    setIsDeleting(true)
 
-                    },
-                    onError: () => {
-                        toast.error("Gagal menghapus pengguna.")
-                    },
-                })
+                    router.post(
+                        route("admin.users.bulk-delete"),
+                        {
+                            selectAll: selectAllAcrossPages,
+                            selectedIds: selectedUsers.map((u) => u.id),
+                            activeSearch: mergedSearch || null,
+                        },
+                        {
+                            preserveScroll: true,
+                            onSuccess: () => {
+                            toast.success("Berhasil menghapus pengguna.")
+                            resetSelection()
+                            setSelectAllAcrossPages(false)
+                            handleCloseDialog()
+                            },
+                            onError: () => {
+                            toast.error("Gagal menghapus pengguna.")
+                            },
+                            onFinish: () => {
+                                setIsDeleting(false) // <- PENTING agar loading state kembali ke normal
+                            },
+                        }
+                    )
                 }}
             >
-                Hapus
+                {isDeleting && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
+                {isDeleting ? "Menghapus..." : "Hapus"}
             </Button>
             </AlertDialogFooter>
         </AlertDialogContent>
