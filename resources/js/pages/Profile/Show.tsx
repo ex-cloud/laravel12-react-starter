@@ -49,32 +49,51 @@ export default function ProfileShow({
   })
 
   const handleSubmit = () => {
-    const phone = form.data.profile.phone ?? ''
+  const phone = form.data.profile.phone ?? ''
 
-    // Validasi format: hanya angka (boleh diawali +), panjang 8–13 digit
-    const phoneRegex = /^\+?[0-9]{8,13}$/
+  // Validasi format: hanya angka (boleh diawali +), panjang 8–13 digit
+  const phoneRegex = /^\+?[0-9]{8,13}$/
 
-    if (phone && !phoneRegex.test(phone)) {
-        form.setError('profile.phone', 'Nomor telepon tidak valid. Harus 8–13 digit.')
-        return
-    }
-    form.clearErrors() // bersihkan error jika valid
-
-    form.patch(route('profile.public.update', user.username), {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.success("Profil berhasil diperbarui", {
-                description: formattedTime,
-            });
-        setIsEditing(false);
-        },
-        onError: () => {
-            toast.error("Gagal menyimpan profil", {
-                description: "Periksa kembali data yang diisi.",
-            });
-        },
-    });
+  if (phone && !phoneRegex.test(phone)) {
+    form.setError('profile.phone', 'Nomor telepon tidak valid. Harus 8–13 digit.')
+    return
   }
+  form.clearErrors() // bersihkan error jika valid
+
+  const formData = new FormData()
+  formData.append('name', form.data.name)
+  formData.append('email', form.data.email)
+  formData.append('profile[gender]', form.data.profile.gender ?? '')
+  formData.append('profile[birthdate]', form.data.profile.birthdate ?? '')
+  formData.append('profile[marital_status]', form.data.profile.marital_status ?? '')
+  formData.append('profile[phone]', form.data.profile.phone ?? '')
+  formData.append('profile[address]', form.data.profile.address ?? '')
+
+    //   cek log update profile
+    // formData.forEach((value, key) => {
+    // console.log(`${key}: ${value}`);
+    // });
+    
+  // ✅ Tambahkan spoof method PATCH di sini
+  formData.append('_method', 'PATCH')
+
+  // Kirim data menggunakan router.post
+  router.post(route('profile.public.update', user.username), formData, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.success("Profil berhasil diperbarui", {
+        description: formattedTime,
+      })
+      setIsEditing(false)
+    },
+    onError: () => {
+      toast.error("Gagal menyimpan profil", {
+        description: "Periksa kembali data yang diisi.",
+      })
+    },
+  })
+}
+
 
   const breadcrumbs: BreadcrumbItem[] = [
     {

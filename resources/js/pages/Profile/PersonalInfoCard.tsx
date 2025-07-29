@@ -59,6 +59,7 @@ export default function PersonalInfoCard({
   const handleEditClick = () => setIsEditing(true);
   const handleCancelClick = () => {
     setIsEditing(false);
+    form.clearErrors();
     setData({
       ...data,
       name: user.name,
@@ -73,8 +74,8 @@ export default function PersonalInfoCard({
     });
   };
   const handleSaveClick = () => {
-  onSubmit(); // ✅ ini akan memanggil form.put(...) dari induk
-  setIsEditing(false);
+     setIsEditing(false);
+     onSubmit();
 };
 
   return (
@@ -104,9 +105,11 @@ export default function PersonalInfoCard({
                 </Link>
             </div>
             <Input
-              type="text"
-              value={data.name}
-              disabled
+                id="name"
+                name="name"
+                type="text"
+                value={data.name}
+                disabled
             />
           </div>
 
@@ -190,7 +193,9 @@ export default function PersonalInfoCard({
           </div>
 
           <div className="mt-4 flex gap-2">
-            <Button size="sm" onClick={handleSaveClick} disabled={!isPhoneValid}>Save</Button>
+            <Button size="sm" onClick={handleSaveClick} disabled={!isPhoneValid || form.processing}>
+                {form.processing ? 'Saving...' : 'Save'}
+            </Button>
             <Button size="sm" variant="outline" onClick={handleCancelClick}>Cancel</Button>
           </div>
         </div>

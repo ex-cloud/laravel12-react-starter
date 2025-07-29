@@ -10,7 +10,7 @@ Route::middleware('auth')->prefix('profile')->group(function () {
         ->name('profile.public.update');
 
     // POST untuk upload avatar
-    Route::post('/{username}/avatar', [AvatarController::class, 'update'])
+    Route::post('/{username}/avatar', action: [AvatarController::class, 'update'])
         ->name('profile.avatar.update');
 
     // GET untuk tampilkan halaman profil user publik
