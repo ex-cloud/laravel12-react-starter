@@ -138,18 +138,20 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                             <DropdownMenuContent align="start">
                                 <DropdownMenuItem
                                     onClick={() => {
+                                        if (selectedRows.length === 0 && !allSelected) return; // Tambahan keamanan
                                         onBulkDelete?.({
                                         selectAll: allSelected,
                                         selectedIds: allSelected ? [] : Object.keys(table.getState().rowSelection),
                                         activeSearch: debouncedSearch,
-                                        })
+                                        });
                                     }}
-                                    className="text-red-600 focus:text-red-700"
+                                    disabled={!allSelected && selectedRows.length === 0}
+                                    className="text-red-600 focus:text-red-700 aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
                                     >
                                     <Trash className="mr-2 h-4 w-4" />
                                     Delete selected ({allSelected ? totalCount : selectedRows.length})
                                 </DropdownMenuItem>
-
+                                
                                 {onExportCSV && (
                                 <DropdownMenuItem onClick={onExportCSV}>
                                     <FileDown className="mr-2 h-4 w-4" />
