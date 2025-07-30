@@ -61,6 +61,18 @@ class ProfileController extends Controller
             );
         }
 
+        if ($request->hasFile('avatar')) {
+            // Hapus avatar lama jika ada
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            // Simpan avatar baru
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+            $user->save(); // simpan path baru
+        }
+
         return to_route('profile.edit')->with('status', 'profile-updated');
     }
 

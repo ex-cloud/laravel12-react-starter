@@ -1,8 +1,7 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
-import AvatarForm from '@/components/AvatarForm';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { FormEventHandler, useRef, useState } from 'react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -12,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import AvatarUploader, { AvatarUploaderHandle } from '@/components/AvatarUploader';
+import AvatarDropdown from '@/components/AvatarDropdown';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -28,20 +29,45 @@ type ProfileForm = {
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
-
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
+    const [newAvatar, setNewAvatar] = useState<File | null>(null)
+    const uploaderRef = useRef<AvatarUploaderHandle>(null)
+    const { data, setData, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
         name: auth.user.name,
         username: auth.user.username || '',
         email: auth.user.email,
     });
 
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        patch(route('profile.update'), {
+        const formData = new FormData();
+        formData.append('_method', 'patch');
+        formData.append('name', data.name);
+        formData.append('username', data.username);
+        formData.append('email', data.email);
+
+        if (newAvatar instanceof File) {
+            formData.append('avatar', newAvatar);
+        }
+
+        router.post(route('profile.update'), formData, {
+            forceFormData: true,
             preserveScroll: true,
+            onSuccess: () => {
+                console.log("Profile updated!");
+            },
+            onError: (err) => {
+                console.error("Upload error:", err);
+            },
         });
     };
+
+    const avatarSrc = newAvatar
+        ? URL.createObjectURL(newAvatar)
+        : typeof auth.user.avatar === 'string' && auth.user.avatar
+            ? auth.user.avatar
+            : '/default-avatar.png';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -52,12 +78,25 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     {/* <HeadingSmall title="My Profile"/> */}
                     <div className='border p-4 rounded-md space-y-4'>
                         <HeadingSmall title="Avatar" description="Upload or change your profile picture" />
-                        <div className='flex space-x-3'>
-                            <AvatarForm />
-                            <div className=''>
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{auth.user.name}</h2>
-                                <p className="text-sm text-gray-500 dark:text-gray-500">@{auth.user.username}</p>
-                            </div>
+                        <div className="flex space-x-4 items-center">
+                                <AvatarDropdown
+                                    avatarSrc={avatarSrc}
+                                    onRemove={() => {
+                                        uploaderRef.current?.clearFile() // 🔥 panggil dulu
+                                        setNewAvatar(null)               // kemudian set state
+                                    }}
+                                    onChange={() => {
+                                        uploaderRef.current?.openFileDialog()
+                                    }}
+                                />
+
+                                <div className="flex-1 space-y-2">
+                                    <AvatarUploader
+                                    ref={uploaderRef}
+                                    maxSizeMB={2}
+                                    onFileChange={(file) => setNewAvatar(file)}
+                                    />
+                                </div>
                         </div>
                     </div>
 

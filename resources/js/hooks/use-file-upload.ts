@@ -274,30 +274,31 @@
     )
 
     const removeFile = useCallback(
-        (id: string) => {
-        setState((prev) => {
-            const fileToRemove = prev.files.find((file) => file.id === id)
-            if (
-            fileToRemove &&
-            fileToRemove.preview &&
-            fileToRemove.file instanceof File &&
-            fileToRemove.file.type.startsWith("image/")
-            ) {
-            URL.revokeObjectURL(fileToRemove.preview)
-            }
+    (id: string) => {
+      console.log("Removing file ID:", id); // Debug log
+      setState((prev) => {
+        const fileToRemove = prev.files.find((file) => file.id === id);
+        if (
+          fileToRemove &&
+          fileToRemove.preview &&
+          fileToRemove.file instanceof File &&
+          fileToRemove.file.type.startsWith("image/")
+        ) {
+          URL.revokeObjectURL(fileToRemove.preview);
+        }
 
-            const newFiles = prev.files.filter((file) => file.id !== id)
-            onFilesChange?.(newFiles)
+        const newFiles = prev.files.filter((file) => file.id !== id);
+        onFilesChange?.(newFiles);
 
-            return {
-            ...prev,
-            files: newFiles,
-            errors: [],
-            }
-        })
-        },
-        [onFilesChange]
-    )
+        return {
+          ...prev,
+          files: newFiles,
+          errors: [],
+        };
+      });
+    },
+    [onFilesChange]
+  );
 
     const clearErrors = useCallback(() => {
         setState((prev) => ({

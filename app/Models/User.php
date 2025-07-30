@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -45,10 +46,15 @@ final class User extends Authenticatable
         ];
     }
 
-
-
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+    // Di User model
+    public function getAvatarAttribute($value): string|null
+    {
+        return $value
+            ? Storage::url($value)
+            : null;
     }
 }

@@ -83,7 +83,7 @@ export function EditSheet<T extends Record<string, FormDataConvertible>>({
     e.preventDefault()
 
     const formData = new FormData()
-    formData.append("_method", "put")
+    formData.append("_method", "patch")
 
     Object.entries(data).forEach(([key, value]) => {
       if (value === null || value === undefined) return
