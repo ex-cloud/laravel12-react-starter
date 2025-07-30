@@ -20,12 +20,8 @@ import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescript
 import { toast } from "sonner"
 import { useTablePreferences } from '@/hooks/use-table-preferences'
 import { usePageProps } from '@/hooks/use-page-props'
-
-type Flash = {
-  success?: string
-  error?: string
-  info?: string
-}
+import { useFlashToast } from '@/hooks/use-flash-toast'
+import { FlashMessage } from '@/types/flash'
 
 export type UserForm = ExtractFormFields<User>
 
@@ -35,7 +31,7 @@ type PaginationMeta = {
   last_page: number
   per_page: number
 }
-type UsersPageProps = {
+interface UsersPageProps {
   users: {
     data: User[]
     meta: PaginationMeta
@@ -47,50 +43,35 @@ type UsersPageProps = {
   totalCount: number
 }
 
-export function useFlashToast(flash?: Flash) {
-  useEffect(() => {
-    if (!flash) return
-
-    if (flash.success) {
-      toast.success(flash.success, {
-        duration: 4000,
-        icon: "✅",
-      })
-    } else if (flash.error) {
-      toast.error(flash.error, {
-        duration: 4000,
-        icon: "❌",
-      })
-    } else if (flash.info) {
-      toast(flash.info, {
-        duration: 4000,
-        icon: "ℹ️",
-      })
-    }
-  }, [flash])
-}
-
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'List User', href: '/admin/users' },
 ]
 
-
 export default function UsersIndex({ users }: UsersPageProps) {
-    const { auth, flash } = usePageProps<{ flash?: Flash }>()
-    useFlashToast(flash)
-    const canAdd = auth.permissions?.includes("create_user")
-    console.log("permissions:", auth.permissions)
-    console.log("canAdd:", canAdd)
+    const { auth, flash } = usePageProps<{ flash?: FlashMessage }>() // Flash message type di ambil di types/flash.ts
 
-  const tableKey = "users"
-  const {
-    pageSize,
-    columnVisibility,
-    sorting,
-    setPageSize,
-    setColumnVisibility,
-    setSorting,
-    } = useTablePreferences(tableKey)
+    // Gunakan hook useFlashToast untuk menampilkan pesan flash
+    useFlashToast(flash, {
+        modelName: "User",
+        actionMap: {
+            ditambahkan: "User baru berhasil dibuat.",
+            diperbarui: "User berhasil diperbarui.",
+            dihapus: "User telah dihapus.",
+        }
+    })
+    // const canAdd = auth.permissions?.includes("create_user")
+    // console.log("permissions:", auth.permissions)
+    // console.log("canAdd:", canAdd)
+
+    const tableKey = "users"
+    const {
+        pageSize,
+        columnVisibility,
+        sorting,
+        setPageSize,
+        setColumnVisibility,
+        setSorting,
+        } = useTablePreferences(tableKey)
 
 
     const [resetAvatar, setResetAvatar] = useState(false)
@@ -106,36 +87,36 @@ export default function UsersIndex({ users }: UsersPageProps) {
     const [selectAllAcrossPages, setSelectAllAcrossPages] = useState(false)
 
 
-  useUserDialogListener(setSelectedUser, setDialogMode, setOpenDialog)
+    useUserDialogListener(setSelectedUser, setDialogMode, setOpenDialog)
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setSelectedUser(null)
-    setDialogMode(null)
-    setResetAvatar(false)
-    setNewAvatar(null)
-  }
-const handleEdit = () => {
-  setOpenDialog(false)
-  setTimeout(() => {
-    setDialogMode("edit")
-    setOpenDialog(true)
-  }, 300) // delay 300ms
-}
+    const handleCloseDialog = () => {
+        setOpenDialog(false)
+        setSelectedUser(null)
+        setDialogMode(null)
+        setResetAvatar(false)
+        setNewAvatar(null)
+    }
 
-const [search, setSearch] = useState("")
-const debouncedSearch = useDebounce(search, 300)
-const debouncedPageSize = useDebounce(pageSize, 300)
+    const handleEdit = () => {
+        setOpenDialog(false)
+        setTimeout(() => {
+            setDialogMode("edit")
+            setOpenDialog(true)
+        }, 300) // delay 300ms
+    }
 
-const mergedSearch = debouncedSearch.trim()
+    const [search, setSearch] = useState("")
+    const debouncedSearch = useDebounce(search, 300)
+    const debouncedPageSize = useDebounce(pageSize, 300)
+    const mergedSearch = debouncedSearch.trim()
 
-const resetSelection = () => {
-  setSelectedUsers([])
-  requestAnimationFrame(() => {
-    setResetSelectionSignal(true)
-    requestAnimationFrame(() => setResetSelectionSignal(false))
-  })
-}
+    const resetSelection = () => {
+        setSelectedUsers([])
+        requestAnimationFrame(() => {
+            setResetSelectionSignal(true)
+            requestAnimationFrame(() => setResetSelectionSignal(false))
+        })
+    }
 
     // 1️⃣ useEffect untuk pencarian
     const fetchUsers = useCallback(() => {
@@ -159,9 +140,9 @@ const resetSelection = () => {
     }, [pageIndex, debouncedPageSize, debouncedSearch, sorting])
 
 
-        useEffect(() => {
+    useEffect(() => {
         fetchUsers()
-        }, [fetchUsers])
+    }, [fetchUsers])
 
 
     // 2️⃣ useEffect untuk event tag:delete
@@ -177,37 +158,38 @@ const resetSelection = () => {
         return () => {
             window.removeEventListener("user:delete", handleDelete as EventListener)
         }
-        }, []) // kosong artinya hanya dijalankan sekali saat mount
+    }, []) // kosong artinya hanya dijalankan sekali saat mount
 
 
-const handleExportCSV = () => {
-  const exportData = selectedUsers.length ? selectedUsers : users.data
+    const handleExportCSV = () => {
+        const exportData = selectedUsers.length ? selectedUsers : users.data
 
-  if (!exportData.length) {
-    toast.warning("Tidak ada data untuk diekspor.")
-    return
-  }
+        if (!exportData.length) {
+            toast.warning("Tidak ada data untuk diekspor.")
+            return
+        }
 
-  const csvContent = [
-    Object.keys(exportData[0])
-      .filter((key) => key !== "avatar")
-      .join(","),
-    ...exportData.map((user) =>
-      Object.values(user)
-        .filter((_, i) => Object.keys(user)[i] !== "avatar")
-        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-        .join(",")
-    ),
-  ].join("\n")
+        const csvContent = [
+            Object.keys(exportData[0])
+            .filter((key) => key !== "avatar")
+            .join(";"),
+            ...exportData.map((user) =>
+            Object.values(user)
+                .filter((_, i) => Object.keys(user)[i] !== "avatar")
+                .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+                .join(";")
+            ),
+        ].join("\n")
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement("a")
-  link.setAttribute("href", url)
-  link.setAttribute("download", `users-export-${Date.now()}.csv`)
-  link.click()
-}
-const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.setAttribute("href", url)
+        link.setAttribute("download", `users-export-${Date.now()}.csv`)
+        link.click()
+    }
+
+    const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -228,12 +210,13 @@ const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
                 enablePagination={true}
                 sorting={sorting}
                 onSortingChange={setSorting}
+                onColumnVisibilityChange={setColumnVisibility}
+                columnVisibility={columnVisibility}
                 customToolbar={{
                     searchValue: search,
                     onSearchChange: setSearch,
                     isLoading,
                     selectedRows: selectedUsers,
-                    // onResetSelection: resetSelection,
                     onBulkDelete: ({ selectAll, selectedIds, activeSearch }) => {
                         const message = selectAll
                             ? `Semua ${users.meta.total} pengguna akan dihapus${
@@ -270,8 +253,6 @@ const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
                 resetRowSelectionSignal={resetSelectionSignal}
                 onRowSelectionChange={(rows) => setSelectedUsers(rows)}
                 tableId={tableKey}
-                onColumnVisibilityChange={setColumnVisibility}
-                columnVisibility={columnVisibility}
                 totalCount={users.meta.total}
             />
       </div>
@@ -324,6 +305,7 @@ const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
           }
         }}
       />
+
     <AlertDialog open={dialogMode === "delete" && openDialog} onOpenChange={handleCloseDialog}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -344,9 +326,9 @@ const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
                     setIsDeleting(true)
                     router.delete(route("admin.users.destroy", selectedUser.id), {
                         onSuccess: () => {
-                        setIsDeleting(false)
-                        resetSelection()
-                        handleCloseDialog()
+                            setIsDeleting(false)
+                            resetSelection()
+                            handleCloseDialog()
                         },
                         onError: () => {
                             toast.error("Gagal menghapus pengguna.")
@@ -364,6 +346,7 @@ const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
+
     <AlertDialog
         open={dialogMode === "bulk-delete" && openDialog }
         onOpenChange={handleCloseDialog}

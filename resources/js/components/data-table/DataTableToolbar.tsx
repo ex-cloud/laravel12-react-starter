@@ -72,10 +72,10 @@ export function DataTableToolbar<TData extends { id: number | string }>({
   const [inputValue, setInputValue] = useState(searchValue)
   const debouncedSearch = useDebounce(inputValue, 300)
 
-
   useEffect(() => {
-    onSearchChange?.(debouncedSearch)
-  }, [debouncedSearch, onSearchChange])
+      onSearchChange?.(debouncedSearch)
+    }, [debouncedSearch, onSearchChange])
+
 
   const hideableColumns = useMemo(() =>
     table.getAllColumns().filter((col) =>
@@ -89,11 +89,15 @@ export function DataTableToolbar<TData extends { id: number | string }>({
     const rowSelection = table.getState().rowSelection
 
     useEffect(() => {
-    if (selectAllAcrossPages && Object.keys(rowSelection).length !== totalCount) {
-        setSelectAllAcrossPages?.(false)
-    }
+        if (selectAllAcrossPages && Object.keys(rowSelection).length !== totalCount) {
+            setSelectAllAcrossPages?.(false)
+        }
     }, [rowSelection, selectAllAcrossPages, totalCount, setSelectAllAcrossPages])
 
+
+    const columnsHidden = useMemo(() => {
+        return hideableColumns.every((col) => !col.getIsVisible())
+    }, [hideableColumns])
 
   return (
   <>
@@ -151,7 +155,7 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                                     <Trash className="mr-2 h-4 w-4" />
                                     Delete selected ({allSelected ? totalCount : selectedRows.length})
                                 </DropdownMenuItem>
-                                
+
                                 {onExportCSV && (
                                 <DropdownMenuItem onClick={onExportCSV}>
                                     <FileDown className="mr-2 h-4 w-4" />
@@ -224,17 +228,16 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                         })}
                         <DropdownMenuSeparator className="my-2" />
                         <DropdownMenuItem
-                            onClick={() => hideableColumns.forEach((c) => c.toggleVisibility(true))}
+                            onClick={() => {
+                                const shouldHide = !columnsHidden
+                                hideableColumns.forEach((c) => c.toggleVisibility(!shouldHide))
+                            }}
                             className="text-[13px]"
-                        >
-                            Show All Columns
+                            >
+                            {columnsHidden ? "Show All Columns" : "Hide All Columns"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => hideableColumns.forEach((c) => c.toggleVisibility(false))}
-                            className="text-[13px]"
-                        >
-                            Hide All Columns
-                        </DropdownMenuItem>
+
+
                         {!allColumnsVisible && (
                             <>
                             <DropdownMenuSeparator className="my-2" />

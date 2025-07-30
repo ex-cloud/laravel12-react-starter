@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BulkDeleteRequest;
 use App\Http\Resources\TagResource;
 use App\Models\Tag;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
@@ -20,6 +22,7 @@ class TagController extends Controller
         $maxPerPage = 100;
         $perPage = min((int) $request->get('perPage', 10), $maxPerPage);
         $perPage = $perPage > 0 ? $perPage : 10;
+        $perPage = $perPage > 0 ? min($perPage, 100) : 10;
 
         $query = Tag::query()
             ->withCount('articles')
@@ -32,8 +35,15 @@ class TagController extends Controller
             });
         }
 
-        // Ambil data Server-side pagination
+        // ✅ Sorting (new)
+        $sort = $request->get('sort', 'created_at');
+        $order = $request->get('order', 'desc');
+        $allowedSorts = ['name', 'slug', 'created_at', 'updated_at'];
+        if (in_array($sort, $allowedSorts)) {
+            $query->orderBy($sort, $order === 'asc' ? 'asc' : 'desc');
+        }
 
+        // Ambil data Server-side pagination
         $tags = $query->paginate($perPage)->appends($request->only(['search', 'perPage']));
 
         return Inertia::render('Admin/Tags/Index', [
@@ -50,6 +60,7 @@ class TagController extends Controller
                     'next' => $tags->nextPageUrl(),
                 ],
             ],
+            'totalCount' => $tags->total(),
         ]);
     }
 
@@ -69,6 +80,7 @@ class TagController extends Controller
         return redirect()->route('admin.tags.index')
             ->with('success', 'Tag berhasil ditambahkan.');
     }
+    
     public function show(Tag $tag)
     {
         return Inertia::render('Admin/Tags/Show', [
@@ -101,5 +113,30 @@ class TagController extends Controller
         return redirect()->route('admin.tags.index')->with([
             'success' => 'Tag berhasil dihapus.',
         ]);
+    }
+
+    public function bulkDelete(BulkDeleteRequest $request): RedirectResponse
+    {
+        $selectAll = $request->boolean('selectAll');
+        $selectedIds = $request->input('selectedIds', []);
+        $search = $request->input('activeSearch');
+        $deleted = 0;
+
+        if ($selectAll) {
+            $query = Tag::query();
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%");
+                });
+            }
+
+            $deleted = $query->delete();
+        } else {
+            $deleted = Tag::whereIn('id', $selectedIds)->delete();
+        }
+
+        return back()->with('success', "{$deleted} tag berhasil dihapus.");
     }
 }

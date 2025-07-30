@@ -87,7 +87,7 @@ export const userColumns = (search: string = ""): ColumnDef<User>[] => [
             const b = (rowB.getValue(columnId) as string || "").toLowerCase()
             return a.localeCompare(b, "id")
         },
-        },
+    },
   {
     accessorKey: "username",
     header: "Username",
