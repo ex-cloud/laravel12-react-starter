@@ -66,10 +66,8 @@ export default function UsersIndex({ users }: UsersPageProps) {
     const tableKey = "users"
     const {
         pageSize,
-        columnVisibility,
         sorting,
         setPageSize,
-        setColumnVisibility,
         setSorting,
         } = useTablePreferences(tableKey)
 
@@ -210,8 +208,6 @@ export default function UsersIndex({ users }: UsersPageProps) {
                 enablePagination={true}
                 sorting={sorting}
                 onSortingChange={setSorting}
-                onColumnVisibilityChange={setColumnVisibility}
-                columnVisibility={columnVisibility}
                 customToolbar={{
                     searchValue: search,
                     onSearchChange: setSearch,

@@ -54,10 +54,8 @@ export default function TagIndex({ tags }: TagProps) {
     const tableKey = "tags"
     const {
         pageSize,
-        columnVisibility,
         sorting,
         setPageSize,
-        setColumnVisibility,
         setSorting,
     } = useTablePreferences(tableKey)
 
@@ -189,8 +187,6 @@ export default function TagIndex({ tags }: TagProps) {
                 enablePagination={true}
                 sorting={sorting}
                 onSortingChange={setSorting}
-                columnVisibility={columnVisibility}
-                onColumnVisibilityChange={setColumnVisibility}
                 customToolbar={{
                     searchValue: search,
                     onSearchChange: setSearch,

@@ -100,7 +100,7 @@ export function DataTablePagination<TData>(props: DataTablePaginationProps<TData
                         onPageSizeChange(size)
                         }}
                     >
-                        <SelectTrigger className="h-8 w-[110px] sm:w-[130px] md:w-[140px]">
+                        <SelectTrigger className="h-8 w-[110px] sm:w-[130px] md:w-[130px]">
                         <SelectValue/>
                         </SelectTrigger>
                         <SelectContent>

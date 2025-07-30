@@ -67,7 +67,7 @@ export function DataTableToolbar<TData extends { id: number | string }>({
     onSelectAllIds,
 }: DataTableToolbarProps<TData>) {
   const table = useTable<TData>()
-  const { resetPreferences } = useTablePreferences(tableId)
+  const { resetPreferences, setColumnVisibility } = useTablePreferences(tableId)
 
   const [inputValue, setInputValue] = useState(searchValue)
   const debouncedSearch = useDebounce(inputValue, 300)
@@ -95,9 +95,9 @@ export function DataTableToolbar<TData extends { id: number | string }>({
     }, [rowSelection, selectAllAcrossPages, totalCount, setSelectAllAcrossPages])
 
 
-    const columnsHidden = useMemo(() => {
-        return hideableColumns.every((col) => !col.getIsVisible())
-    }, [hideableColumns])
+    const columnsHidden =
+    hideableColumns.length > 0 && hideableColumns.every((col) => !col.getIsVisible())
+
 
   return (
   <>
@@ -127,7 +127,7 @@ export function DataTableToolbar<TData extends { id: number | string }>({
             </div>
         )}
     </div>
-    <div className="flex flex-wrap justify-between items-center gap-2 bg-white dark:bg-transparent border border-border p-2 rounded-md">
+    <div className="flex flex-wrap justify-between items-center gap-2 bg-white dark:bg-transparent">
         {/* Kiri: Info bulk selection (jika ada) */}
         <div className="flex items-center gap-2">
             {Object.keys(table.getState().rowSelection).length > 0 && (
@@ -213,7 +213,13 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                                 <TooltipTrigger asChild>
                                 <DropdownMenuCheckboxItem
                                     checked={column.getIsVisible()}
-                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                    onCheckedChange={(value) => {
+                                        column.toggleVisibility(!!value) // update react-table UI
+                                        setColumnVisibility((prev) => ({
+                                        ...prev,
+                                        [column.id]: !!value,          // simpan preferensi ke localStorage
+                                        }))
+                                    }}
                                     className="capitalize data-[state=checked]:font-medium text-[13px] px-2 py-1.5 rounded-md flex items-center gap-x-2"
                                 >
                                     {column.getIsVisible() ? <Check className="w-3 h-3" /> : <div className="w-4 h-4" />}
@@ -230,8 +236,17 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                         <DropdownMenuItem
                             onClick={() => {
                                 const shouldHide = !columnsHidden
-                                hideableColumns.forEach((c) => c.toggleVisibility(!shouldHide))
-                            }}
+                                const updatedVisibility = hideableColumns.reduce((acc, c) => {
+                                    acc[c.id] = !shouldHide
+                                    c.toggleVisibility(!shouldHide) // update UI
+                                    return acc
+                                    }, {} as Record<string, boolean>)
+
+                                    setColumnVisibility((prev) => ({
+                                    ...prev,
+                                    ...updatedVisibility, // simpan ke localStorage
+                                    }))
+                                }}
                             className="text-[13px]"
                             >
                             {columnsHidden ? "Show All Columns" : "Hide All Columns"}

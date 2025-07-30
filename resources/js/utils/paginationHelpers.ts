@@ -40,7 +40,8 @@ export function getPageSizeOptions(
   // Siapkan opsi final dengan flag disabled (kecuali pageSize sekarang)
   return rawOptions.map(({ value, label }) => ({
     value,
-    label: value === currentPageSize ? `${label} (current)` : label,
+    label,
+    // label: value === currentPageSize ? `${label} (current)` : label,
     disabled: !activeValuesSet.has(value) && value !== currentPageSize,
   }))
 }

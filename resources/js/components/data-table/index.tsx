@@ -12,8 +12,6 @@ SortingState,
 getSortedRowModel,
 ColumnFiltersState,
 getFilteredRowModel,
-VisibilityState,
-Updater,
 OnChangeFn,
 } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
@@ -75,8 +73,6 @@ interface DataTableProps<TData extends { id: number | string }, TValue> {
     resetRowSelectionSignal?: boolean
     onRowSelectionChange?: (selectedRows: TData[]) => void
     headerContent?: React.ReactNode
-    onColumnVisibilityChange?: (updater: Updater<VisibilityState>) => void
-    columnVisibility?: VisibilityState
     totalCount?: number
 }
 
@@ -102,7 +98,6 @@ customToolbar,
 pagination,
 tableId,
 totalCount,
-onColumnVisibilityChange,
 }: DataTableProps<TData, TValue>) {
 
     const {
@@ -112,7 +107,6 @@ onColumnVisibilityChange,
     setColumnSizing,
     columnSizing,
     setPageSize,
-    // setColumnVisibility,
     } = useTablePreferences(tableId ?? "default")
 
     const [internalSorting, setInternalSorting] = React.useState<SortingState>(
@@ -120,7 +114,6 @@ onColumnVisibilityChange,
     )
 
 
-    // const sortingState = sorting ?? internalSorting
     const handleSortingChange: OnChangeFn<SortingState> =
         onSortingChange ??
         ((updaterOrValue) => {
@@ -132,8 +125,6 @@ onColumnVisibilityChange,
         })
 
 const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-
-//   const [columnVisibility, setColumnVisibilityState] = React.useState<VisibilityState>(savedVisibility)
 
 const [selectedRowIds, setSelectedRowIds] = React.useState<Record<string, boolean>>({})
 
@@ -200,7 +191,7 @@ const table = useReactTable({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: onColumnVisibilityChange ?? setColumnVisibility,
+    onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: (updater) => {
         const newSelection = typeof updater === "function"
             ? updater(selectedRowIds)
@@ -208,7 +199,6 @@ const table = useReactTable({
         setSelectedRowIds(newSelection)
         },
     getRowId: (row) => row.id.toString(),
-    // onColumnVisibilityChange: onColumnVisibilityChange ?? handleColumnVisibilityChange(setColumnVisibilityState),
 
     initialState: {
         columnSizing,
