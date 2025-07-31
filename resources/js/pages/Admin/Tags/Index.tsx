@@ -67,7 +67,6 @@ export default function TagIndex({ tags }: TagProps) {
     const [resetSelectionSignal, setResetSelectionSignal] = useState(false)
     const [pageIndex, setPageIndex] = useState(tags.meta.current_page - 1)
     const [isLoading, setIsLoading] = useState(false)
-    const [selectAllAcrossPages, setSelectAllAcrossPages] = useState(false)
 
 
     useTagDialogListener(setSelectedTag, setDialogMode, setOpenDialog)
@@ -206,8 +205,6 @@ export default function TagIndex({ tags }: TagProps) {
                     addButtonLabel: "Add Tag",
                     showSearch: true,
                     showAddButton: true,
-                    selectAllAcrossPages,
-                    setSelectAllAcrossPages,
                     onExportCSV: handleExportCSV, // ✅ tambahan
                     // canAdd: auth.permissions?.includes("create_user"),
                     onResetSelection: () => {

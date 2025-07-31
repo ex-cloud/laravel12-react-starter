@@ -67,7 +67,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         ? URL.createObjectURL(newAvatar)
         : typeof auth.user.avatar === 'string' && auth.user.avatar
             ? auth.user.avatar
-            : '/default-avatar.png';
+            : '/default,jpg';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

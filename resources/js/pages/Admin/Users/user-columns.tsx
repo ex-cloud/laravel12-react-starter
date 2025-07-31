@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 import { highlightSearch } from "@/utils/highlight"
 import { UserActionsCell } from "./UserActionsCell"
 import { User } from "@/types"
+import { getSafeAvatarUrl } from "@/lib/avatar"
 
 // Helper untuk menghindari undefined/null
 const safe = (text?: string | null): string => text ?? ""
@@ -39,7 +40,7 @@ export const userColumns = (search: string = ""): ColumnDef<User>[] => [
     enableResizing: false,
     meta: { width: "min-w-[40px]" },
     cell: ({ row }) => {
-      const avatarUrl = safe(row.original.avatar) || "/assets/default.jpg"
+      const avatarUrl = getSafeAvatarUrl(row.original.avatar)
       return (
         <img
           src={avatarUrl}

@@ -82,8 +82,6 @@ export default function UsersIndex({ users }: UsersPageProps) {
     const [resetSelectionSignal, setResetSelectionSignal] = useState(false)
     const [pageIndex, setPageIndex] = useState(users.meta.current_page - 1)
     const [isLoading, setIsLoading] = useState(false)
-    const [selectAllAcrossPages, setSelectAllAcrossPages] = useState(false)
-
 
     useUserDialogListener(setSelectedUser, setDialogMode, setOpenDialog)
 
@@ -188,6 +186,12 @@ export default function UsersIndex({ users }: UsersPageProps) {
     }
 
     const [bulkDeleteMessage, setBulkDeleteMessage] = useState("")
+    const [bulkDeletePayload, setBulkDeletePayload] = useState<{
+        selectAll: boolean
+        selectedIds: number[]
+        activeSearch: string | null
+    } | null>(null)
+
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -223,13 +227,18 @@ export default function UsersIndex({ users }: UsersPageProps) {
                         setBulkDeleteMessage(message)
                         setDialogMode("bulk-delete")
                         setOpenDialog(true)
-                        },
+
+                        // ✅ Simpan data ini ke state agar digunakan saat user menekan tombol Hapus di dialog konfirmasi
+                        setBulkDeletePayload({
+                            selectAll: false,
+                            selectedIds: selectedIds.map((id) => Number(id)),
+                            activeSearch: activeSearch || null,
+                        })
+                    },
                     onAddClick: () => router.visit("/admin/users/create"),
                     addButtonLabel: "Add User",
                     showSearch: true,
                     showAddButton: true,
-                    selectAllAcrossPages,
-                    setSelectAllAcrossPages,
                     onExportCSV: handleExportCSV, // ✅ tambahan
                     canAdd: auth.permissions?.includes("create_user"),
                     onResetSelection: () => {
@@ -363,32 +372,30 @@ export default function UsersIndex({ users }: UsersPageProps) {
                 disabled={isDeleting}
                 className="bg-rose-600 hover:bg-rose-700 text-white justify-center"
                 onClick={() => {
-                    setIsDeleting(true)
+                    if (!bulkDeletePayload) return;
+
+                    setIsDeleting(true);
 
                     router.post(
                         route("admin.users.bulk-delete"),
+                        bulkDeletePayload,
                         {
-                            selectAll: selectAllAcrossPages,
-                            selectedIds: selectedUsers.map((u) => u.id),
-                            activeSearch: mergedSearch || null,
-                        },
-                        {
-                            preserveScroll: true,
-                            onSuccess: () => {
+                        preserveScroll: true,
+                        onSuccess: () => {
                             toast.success("Berhasil menghapus pengguna.")
                             resetSelection()
-                            setSelectAllAcrossPages(false)
                             handleCloseDialog()
-                            },
-                            onError: () => {
+                        },
+                        onError: () => {
                             toast.error("Gagal menghapus pengguna.")
-                            },
-                            onFinish: () => {
-                                setIsDeleting(false) // <- PENTING agar loading state kembali ke normal
-                            },
+                        },
+                        onFinish: () => {
+                            setIsDeleting(false)
+                        },
                         }
                     )
                 }}
+
             >
                 {isDeleting && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
                 {isDeleting ? "Menghapus..." : "Hapus"}

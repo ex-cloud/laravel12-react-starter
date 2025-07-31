@@ -52,7 +52,7 @@ final class UserController extends Controller
 
         // Ambil data Server-side pagination
         $users = $query->paginate($perPage)->appends($request->only(['search', 'perPage', 'sort', 'order']));
-
+        $allIds = $query->pluck('id')->toArray();
         // Return ke Inertia
         return Inertia::render('Admin/Users/Index', [
             'users' => [
@@ -69,6 +69,7 @@ final class UserController extends Controller
                 ],
             ],
             'totalCount' => $users->total(),
+            'allIds' => $allIds,
         ]);
     }
 
@@ -205,6 +206,7 @@ final class UserController extends Controller
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             }

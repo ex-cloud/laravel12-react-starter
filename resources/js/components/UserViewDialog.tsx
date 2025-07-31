@@ -4,6 +4,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import type { User } from "@/types"
 import { Button } from "./ui/button"
+import { getSafeAvatarUrl } from "@/lib/avatar"
 
 interface Props {
   user: User | null
@@ -31,10 +32,10 @@ export default function UserViewDialog({ user, open, onOpenChange, onEdit, onDel
           ) : (
             <div className="space-y-4 text-center">
               <img
-                src={user.avatar || "/assets/default.jpg"}
+                src={user.avatar || getSafeAvatarUrl(user.avatar)}
                 alt={user.name}
                 className="w-24 h-24 rounded-full mx-auto object-cover border"
-                onError={(e) => (e.currentTarget.src = "/assets/default.jpg")}
+                onError={(e) => (e.currentTarget.src = getSafeAvatarUrl(user.avatar))}
               />
               <div className="space-y-2 flex flex-col">
                 <h2 className="text-lg font-bold">{user.name}</h2>

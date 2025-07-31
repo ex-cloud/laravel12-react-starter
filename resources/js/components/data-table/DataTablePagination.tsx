@@ -18,6 +18,8 @@ import { getPageSizeOptions } from "@/utils/paginationHelpers"
 type DataTablePaginationProps<TData> =
   | {
       table: TableInstance<TData>
+      selectAllAcrossPages?: boolean
+      totalCount?: number
     }
   | {
       table?: never // untuk server-side pagination
@@ -28,6 +30,7 @@ type DataTablePaginationProps<TData> =
       onPageSizeChange: (size: number) => void
       selectedCount: number
       totalCount?: number
+      selectAllAcrossPages?: boolean
     }
 
 export function DataTablePagination<TData>(props: DataTablePaginationProps<TData>) {
@@ -77,14 +80,20 @@ export function DataTablePagination<TData>(props: DataTablePaginationProps<TData
         <div className="flex items-center justify-between px-2">
             <div className="text-muted-foreground flex-1 text-sm">
                 {filteredCount === 0 ? (
-                <span className="italic text-muted-foreground">No data available.</span>
-                ) : (
-                <>
-                    <span className="block lg:hidden">{selectedCount} selected</span>
-                    <span className="hidden lg:block">
-                    {selectedCount} of {filteredCount} row(s) selected.
-                    </span>
-                </>
+                        <span className="italic text-muted-foreground">No data available.</span>
+                    ) : (
+                        <>
+                        <span className="block lg:hidden">
+                            {props.selectAllAcrossPages
+                            ? `All ${props.totalCount ?? filteredCount} records selected across all pages`
+                            : `${selectedCount} selected`}
+                        </span>
+                        <span className="hidden lg:block">
+                            {props.selectAllAcrossPages
+                            ? `All ${props.totalCount ?? filteredCount} records selected across all pages`
+                            : `${selectedCount} of ${props.totalCount ?? filteredCount} row(s) selected.`}
+                        </span>
+                        </>
                 )}
             </div>
 

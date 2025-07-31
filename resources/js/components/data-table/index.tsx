@@ -59,8 +59,6 @@ interface DataTableProps<TData extends { id: number | string }, TValue> {
         showAddButton?: boolean
         onExportCSV?: () => void
         canAdd?: boolean
-        selectAllAcrossPages?: boolean
-        setSelectAllAcrossPages?: (value: boolean) => void
         onSetBulkDeleteMessage?: (message: string) => void
     }
     pagination?: {
@@ -166,13 +164,6 @@ React.useEffect(() => {
         container?.addEventListener("scroll", handleScroll)
         return () => container?.removeEventListener("scroll", handleScroll)
     }, [isFetchingMore, visibleRows, data.length, pagination])
-
-    const handleSelectAllRows = (allIds: string[]) => {
-        const selection = Object.fromEntries(allIds.map(id => [id.toString(), true]));
-        table.setRowSelection(selection);
-        setSelectedRowIds(selection);
-    };
-
 
 React.useEffect(() => {
     if (pagination) {
@@ -304,10 +295,6 @@ React.useEffect(() => {
                                     ? pagination.pageCount * pagination.pageSize
                                     : data.length)
                                 }
-                                selectAllAcrossPages={customToolbar.selectAllAcrossPages}
-                                setSelectAllAcrossPages={customToolbar.setSelectAllAcrossPages}
-                                onSelectAllIds={handleSelectAllRows}
-
                             />
                         )}
                     </div>
@@ -431,22 +418,23 @@ React.useEffect(() => {
                 <div className="py-4">
                 <DataTablePagination
                     {...(pagination
-                    ? {
-                        pageIndex: pagination.pageIndex,
-                        pageCount: pagination.pageCount,
-                        pageSize: pagination.pageSize,
-                        onPageChange: pagination.onPageChange,
-                        onPageSizeChange: (size) => {
+                        ? {
+                            pageIndex: pagination.pageIndex,
+                            pageCount: pagination.pageCount,
+                            pageSize: pagination.pageSize,
+                            onPageChange: pagination.onPageChange,
+                            onPageSizeChange: (size) => {
                             pagination.onPageSizeChange(size)
-                            setPageSize(size) // ✅ simpan ke preferensi
+                            setPageSize(size)
                             },
-                        selectedCount: table.getFilteredSelectedRowModel().rows.length,
-                        totalCount: table.getRowModel().rows.length,
-                        }
-                    : {
-                        table,
+                            selectedCount: table.getFilteredSelectedRowModel().rows.length,
+                            totalCount: totalCount ?? table.getRowModel().rows.length,
+                            isLoading: customToolbar?.isLoading ?? false,}
+                        : {
+                            table,
                         })}
                 />
+
                 </div>
             )}
             </TableContext.Provider>

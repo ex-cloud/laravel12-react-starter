@@ -19,6 +19,7 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer"
 import type { User } from "@/types"
+import { getSafeAvatarUrl } from "@/lib/avatar"
 
 interface Props {
   user: User | null
@@ -34,10 +35,10 @@ export function UserDrawerDialog({ user, open, onOpenChange, mode = "view" }: Pr
     const content = mode === "view" ? (
       <div className="space-y-4 text-center p-4">
         <img
-          src={user.avatar || "/assets/default.jpg"}
+          src={user.avatar || getSafeAvatarUrl(user.avatar)}
           alt={user.name}
           className="w-24 h-24 rounded-full mx-auto object-cover border"
-          onError={(e) => (e.currentTarget.src = "/assets/default.jpg")}
+          onError={(e) => (e.currentTarget.src = getSafeAvatarUrl(user.avatar))}
         />
         <div>
           <h2 className="text-lg font-bold">{user.name}</h2>

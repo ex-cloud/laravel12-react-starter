@@ -22,7 +22,6 @@ final class UserFactory extends Factory
             'id' => Str::uuid(), // ini oke
             'name' => fake()->name(),
             'username' => fake()->unique()->userName(),
-            'avatar' => '/assets/default.jpg',
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),

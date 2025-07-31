@@ -19,7 +19,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 
 interface BulkDeletePayload {
     selectAll: boolean
-    selectedIds: string[]
+    selectedIds: (string | number)[]
     activeSearch?: string
     filters?: {
         search?: string
@@ -43,9 +43,6 @@ interface DataTableToolbarProps<TData> {
   canAdd?: boolean
   tableId: string
   totalCount: number
-  selectAllAcrossPages?: boolean
-  setSelectAllAcrossPages?: (value: boolean) => void
-  onSelectAllIds?: (allIds: string[]) => void;
 }
 
 export function DataTableToolbar<TData extends { id: number | string }>({
@@ -62,9 +59,6 @@ export function DataTableToolbar<TData extends { id: number | string }>({
     canAdd = true,
     tableId,
     totalCount,
-    selectAllAcrossPages,
-    setSelectAllAcrossPages,
-    onSelectAllIds,
 }: DataTableToolbarProps<TData>) {
   const table = useTable<TData>()
   const { resetPreferences, setColumnVisibility } = useTablePreferences(tableId)
@@ -82,21 +76,13 @@ export function DataTableToolbar<TData extends { id: number | string }>({
       col.getCanHide() && col.id !== "select" && col.id !== "actions"
     ), [table])
 
-    const allColumnsVisible = hideableColumns.every((col) => col.getIsVisible())
-    const allSelected = selectAllAcrossPages ?? false
-    const updateSelectAllAcrossPages = setSelectAllAcrossPages ?? (() => {})
+  const allColumnsVisible = hideableColumns.every((col) => col.getIsVisible())
 
-    const rowSelection = table.getState().rowSelection
-
-    useEffect(() => {
-        if (selectAllAcrossPages && Object.keys(rowSelection).length !== totalCount) {
-            setSelectAllAcrossPages?.(false)
-        }
-    }, [rowSelection, selectAllAcrossPages, totalCount, setSelectAllAcrossPages])
-
-
-    const columnsHidden =
+  const columnsHidden =
     hideableColumns.length > 0 && hideableColumns.every((col) => !col.getIsVisible())
+
+  // Define allSelected: true if all rows are selected
+  const allSelected = Object.keys(table.getState().rowSelection).length === totalCount
 
 
   return (
@@ -280,12 +266,10 @@ export function DataTableToolbar<TData extends { id: number | string }>({
             </div>
     </div>
 
-    {(Object.keys(table.getState().rowSelection).length > 0 || allSelected) && (
+    {(Object.keys(table.getState().rowSelection).length > 0) && (
         <div className="flex justify-between items-center bg-muted/50 dark:bg-transparent border border-border p-2 rounded-md">
             <span className="text-xs text-muted-foreground">
-            {allSelected
-                ? `All ${totalCount} records selected across all pages`
-                : `${Object.keys(table.getState().rowSelection).length} records selected`}
+            {`${Object.keys(table.getState().rowSelection).length} row(s) selected on this page`}
             </span>
 
             <div className="flex items-center gap-2 text-xs">
@@ -293,24 +277,23 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                 <button
                 className="underline text-primary"
                 onClick={() => {
-                    updateSelectAllAcrossPages(true);
-
-                    // Ambil semua ID dari data table (pastikan table.options.data berisi data yang lengkap!)
-                    const allIds = table.options.data.map((row) => row.id.toString());
-
-                    // Trigger callback dari parent
-                    if (typeof onSelectAllIds === "function") {
-                      onSelectAllIds(allIds);
-                    }
-                  }}
+                    table.resetRowSelection()
+                    const currentPageIds = table.getRowModel().rows.map(row => row.id)
+                    table.setRowSelection(
+                        currentPageIds.reduce((acc, id) => {
+                        acc[id] = true
+                        return acc
+                        }, {} as Record<string, boolean>)
+                    )
+                }}
                 >
-                Select all {totalCount} rows
+                Select all rows
+
                 </button>
             )}
             <div
                 onClick={() => {
-                table.resetRowSelection()
-                updateSelectAllAcrossPages(false)
+                table.resetRowSelection();
                 }}
                 className="cursor-pointer flex items-center gap-1 text-muted-foreground hover:text-foreground"
             >
@@ -319,7 +302,9 @@ export function DataTableToolbar<TData extends { id: number | string }>({
             </div>
             </div>
         </div>
-    )}
+        )}
+
+
 
 
     {/* Active filters badge */}

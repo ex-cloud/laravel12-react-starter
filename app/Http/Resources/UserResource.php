@@ -16,17 +16,15 @@ final class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // if ($this->resource->avatar && str_contains($this->resource->avatar, '//')) {
+        //     \Log::warning('Avatar path tidak valid: ' . $this->resource->avatar);
+        // }
         return [
             'id'       => $this->resource->id,
             'name'     => $this->resource->name,
             'username' => $this->resource->username,
             'email'    => $this->resource->email,
-            'avatar'   => $this->resource->avatar
-                ? asset(Str::startsWith($this->resource->avatar, 'avatars/')
-                    ? 'storage/' . $this->resource->avatar
-                    : $this->resource->avatar)
-                : asset('assets/default.jpg'),
-            // ✅ Flatten ProfileResource langsung ke array
+            'avatar' => get_safe_avatar_url($this->resource->avatar),
 
             'profile' => $this->whenLoaded('profile', fn() => (new ProfileResource($this->resource->profile))->toArray($request)),
 

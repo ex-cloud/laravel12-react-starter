@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
             'username' => 'andiansyah',
             'email' => 'andiansyah@kdua.net',
             'password' => Hash::make('Semangatku@25'),
-            'avatar' => '/assets/default.jpg',
         ]);
 
         // 3. Buat profil user
@@ -45,6 +44,6 @@ class DatabaseSeeder extends Seeder
         $user->assignRole('admin');
 
         // 5. Generate user dummy
-        User::factory(100)->create();
+        User::factory(10)->create();
     }
 }

@@ -9,7 +9,7 @@ class UserObserver
     public function creating(User $user)
     {
         if (!$user->avatar) {
-            $user->avatar = '/assets/default.jpg';
+            $user->avatar = null;
         }
     }
 }
