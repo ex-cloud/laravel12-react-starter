@@ -44,6 +44,6 @@ class DatabaseSeeder extends Seeder
         $user->assignRole('admin');
 
         // 5. Generate user dummy
-        User::factory(10)->create();
+        User::factory(24)->create();
     }
 }

@@ -52,10 +52,12 @@
     handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void
     openFileDialog: () => void
     getInputProps: (
-        props?: InputHTMLAttributes<HTMLInputElement>
-    ) => InputHTMLAttributes<HTMLInputElement> & {
-        ref: React.Ref<HTMLInputElement>
-    }
+            props?: InputHTMLAttributes<HTMLInputElement>
+        ) => InputHTMLAttributes<HTMLInputElement> & {
+            ref: React.Ref<HTMLInputElement>
+        }
+    inputRef: React.RefObject<HTMLInputElement | null> // ✅ ini penting!
+
     }
 
     export const useFileUpload = (
@@ -396,6 +398,7 @@
         handleFileChange,
         openFileDialog,
         getInputProps,
+        inputRef,
         },
     ]
     }

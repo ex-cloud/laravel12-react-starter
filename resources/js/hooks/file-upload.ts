@@ -19,8 +19,8 @@ type FileWithPreview = {
     handleDrop: (event: React.DragEvent<HTMLDivElement>) => void
     openFileDialog: () => void
     removeFile: (id: string) => void
-    getInputProps: () => Omit<React.InputHTMLAttributes<HTMLInputElement>, "ref">
-    inputRef: React.RefObject<HTMLInputElement | null>
+    getInputProps: (props?: Partial<React.InputHTMLAttributes<HTMLInputElement>>) => React.InputHTMLAttributes<HTMLInputElement>
+    inputRef: React.RefObject<HTMLInputElement | null> // ✅ ini penting!
   }
 
   type UseFileUploadResult = [
@@ -114,12 +114,16 @@ const removeFile = (id: string) => {
     setFiles((prev) => prev.filter((file) => file.id !== id))
 }
 
-const getInputProps = (): React.InputHTMLAttributes<HTMLInputElement> => ({
-    type: "file",
-    accept: options.accept,
-    multiple: options.multiple ?? false,
-    onChange: handleInputChange,
+const getInputProps = (
+  props: Partial<React.InputHTMLAttributes<HTMLInputElement>> = {}
+): React.InputHTMLAttributes<HTMLInputElement> => ({
+  type: "file",
+  accept: options.accept,
+  multiple: options.multiple ?? false,
+  onChange: handleInputChange,
+  ...props, // <-- INI PENTING
 })
+
 
 return [
     {

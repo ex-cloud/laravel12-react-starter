@@ -244,8 +244,17 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                             <DropdownMenuSeparator className="my-2" />
                             <DropdownMenuItem
                                 onClick={() => {
-                                resetPreferences()
-                                location.reload()
+                                    const defaultVisibility = hideableColumns.reduce((acc, c) => {
+                                    acc[c.id] = true
+                                    c.toggleVisibility(true) // update UI react-table langsung
+                                    return acc
+                                    }, {} as Record<string, boolean>)
+
+                                    resetPreferences({
+                                    columnVisibility: defaultVisibility,
+                                    sorting: [],       // default sorting bisa dikustom
+                                    pageSize: 10       // default page size (atau ambil dari props nanti)
+                                    })
                                 }}
                                 className="text-red-600 text-[13px]"
                             >
@@ -275,7 +284,7 @@ export function DataTableToolbar<TData extends { id: number | string }>({
             <div className="flex items-center gap-2 text-xs">
             {!allSelected && (
                 <button
-                className="underline text-primary"
+                className="underline text-muted-foreground hover:text-foreground cursor-pointer"
                 onClick={() => {
                     table.resetRowSelection()
                     const currentPageIds = table.getRowModel().rows.map(row => row.id)

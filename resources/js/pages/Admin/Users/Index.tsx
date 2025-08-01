@@ -82,7 +82,7 @@ export default function UsersIndex({ users }: UsersPageProps) {
     const [resetSelectionSignal, setResetSelectionSignal] = useState(false)
     const [pageIndex, setPageIndex] = useState(users.meta.current_page - 1)
     const [isLoading, setIsLoading] = useState(false)
-
+    const [, setSelectedRowIds] = useState<Record<string, boolean>>({})
     useUserDialogListener(setSelectedUser, setDialogMode, setOpenDialog)
 
     const handleCloseDialog = () => {
@@ -105,7 +105,6 @@ export default function UsersIndex({ users }: UsersPageProps) {
     const debouncedSearch = useDebounce(search, 300)
     const debouncedPageSize = useDebounce(pageSize, 300)
     const mergedSearch = debouncedSearch.trim()
-
     const resetSelection = () => {
         setSelectedUsers([])
         requestAnimationFrame(() => {
@@ -212,6 +211,7 @@ export default function UsersIndex({ users }: UsersPageProps) {
                 enablePagination={true}
                 sorting={sorting}
                 onSortingChange={setSorting}
+                onSelectedRowIdsChange={(rowSelection) => setSelectedRowIds(rowSelection)}
                 customToolbar={{
                     searchValue: search,
                     onSearchChange: setSearch,
@@ -256,7 +256,9 @@ export default function UsersIndex({ users }: UsersPageProps) {
                     pageCount: users.meta.last_page,
                 }}
                 resetRowSelectionSignal={resetSelectionSignal}
-                onRowSelectionChange={(rows) => setSelectedUsers(rows)}
+                onRowSelectionChange={(rows) => {
+                    setSelectedUsers(rows) // masih untuk tampilan saat ini
+                }}
                 tableId={tableKey}
                 totalCount={users.meta.total}
             />

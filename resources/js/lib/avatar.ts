@@ -3,12 +3,18 @@ export function getSafeAvatarUrl(avatar: string | null | undefined): string {
 
   const clean = avatar.trim().replace(/^\/+/, "") // hapus leading slash
 
+  // Jika URL absolut (avatar dari Google, dsb)
+  if (clean.startsWith("http://") || clean.startsWith("https://")) {
+    return clean
+  }
+
+  // Validasi path yang diizinkan
   if (
-    clean.includes("//") ||
+    clean.includes("//") || // cegah SSRF
     (!clean.startsWith("avatars/") && !clean.startsWith("assets/"))
   ) {
     return "/assets/default.jpg"
   }
 
-  return `/${clean}`
+  return `/storage/${clean}`
 }

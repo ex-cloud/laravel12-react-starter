@@ -209,7 +209,8 @@
 }
 /* contoh di resources/css/app.css */
 [data-state="selected"] {
-  background-color: rgba(59, 130, 246, 0.1);
+  /* background-color: rgba(59, 130, 246, 0.1); */
+  @apply bg-primary/10 ;
 }
 /*
   ---break---

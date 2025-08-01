@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 import { highlightSearch } from "@/utils/highlight"
 import { UserActionsCell } from "./UserActionsCell"
 import { User } from "@/types"
-import { getSafeAvatarUrl } from "@/lib/avatar"
+// import { getSafeAvatarUrl } from "@/lib/avatar"
 
 // Helper untuk menghindari undefined/null
 const safe = (text?: string | null): string => text ?? ""
@@ -12,7 +12,7 @@ const safe = (text?: string | null): string => text ?? ""
 export const userColumns = (search: string = ""): ColumnDef<User>[] => [
   {
     id: "select",
-    size: 40,
+    size: 20,
     minSize: 20,
     enableResizing: false,
     meta: { width: "min-w-[20px]" },
@@ -34,13 +34,13 @@ export const userColumns = (search: string = ""): ColumnDef<User>[] => [
   {
     accessorKey: "avatar",
     header: "Avatar",
-    size: 40, // Mengurangi ukuran kolom avatar
+    size: 20, // Mengurangi ukuran kolom avatar
     minSize: 20, // Ukuran minimal avatar
-    maxSize: 100,
+    // maxSize: 100,
     enableResizing: false,
-    meta: { width: "min-w-[40px]" },
+    meta: { width: "min-w-[20px]" },
     cell: ({ row }) => {
-      const avatarUrl = getSafeAvatarUrl(row.original.avatar)
+    const avatarUrl = safe(row.original.avatar) || "/assets/default.jpg"
       return (
         <img
           src={avatarUrl}

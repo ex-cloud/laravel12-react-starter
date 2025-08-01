@@ -119,9 +119,16 @@ export function useTablePreferences(tableKey: string) {
       }),
 
     // ✅ Tambahkan ini
-    resetPreferences: () => {
-      localStorage.removeItem(storageKey)
-      setPreferences(DEFAULTS)
-    },
+    resetPreferences: (defaults?: Partial<Preferences>) => {
+    localStorage.removeItem(storageKey)
+
+    const finalDefaults = {
+        ...DEFAULTS,
+        ...defaults,
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify(finalDefaults))
+    setPreferences(finalDefaults)
+    }
   }
 }

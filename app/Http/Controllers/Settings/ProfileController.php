@@ -69,7 +69,7 @@ class ProfileController extends Controller
 
             // Simpan avatar baru
             $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $path;
+            $user->avatar = Storage::url($path);
             $user->save(); // simpan path baru
         }
 

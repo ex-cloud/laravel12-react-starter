@@ -13,6 +13,7 @@ getSortedRowModel,
 ColumnFiltersState,
 getFilteredRowModel,
 OnChangeFn,
+Table as TanStackTable,
 } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import {
@@ -42,6 +43,7 @@ interface DataTableProps<TData extends { id: number | string }, TValue> {
     enablePagination?: boolean
     sorting?: SortingState
     onSortingChange?: OnChangeFn<SortingState>
+    onTableRef?: (table: TanStackTable<TData>) => void
     customToolbar?: {
         showSearch?: boolean
         searchValue?: string
@@ -72,6 +74,7 @@ interface DataTableProps<TData extends { id: number | string }, TValue> {
     onRowSelectionChange?: (selectedRows: TData[]) => void
     headerContent?: React.ReactNode
     totalCount?: number
+    onSelectedRowIdsChange?: (rowSelection: Record<string, boolean>) => void
 }
 
     export const defaultColumnSizing = {
@@ -86,10 +89,12 @@ columns,
 data,
 sorting, // ✅ Ini sudah di-destructure
 onSortingChange, // ✅ Ini juga
+onTableRef, // ✅ tambahkan ini
 filterableColumns = [],
 enableInternalFilter = true,
 enablePagination = true,
 onRowSelectionChange,
+onSelectedRowIdsChange,
 resetRowSelectionSignal = false,
 headerContent,
 customToolbar,
@@ -184,11 +189,13 @@ const table = useReactTable({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: (updater) => {
-        const newSelection = typeof updater === "function"
-            ? updater(selectedRowIds)
-            : updater
-        setSelectedRowIds(newSelection)
-        },
+    const newSelection = typeof updater === 'function'
+        ? updater(selectedRowIds)
+        : updater
+
+    setSelectedRowIds(newSelection)               // ✅ local state internal DataTable
+    onSelectedRowIdsChange?.(newSelection)        // ✅ update ke parent
+    },
     getRowId: (row) => row.id.toString(),
 
     initialState: {
@@ -218,11 +225,19 @@ const table = useReactTable({
     getCoreRowModel: getCoreRowModel(),
 })
 
-React.useEffect(() => {
-    if (resetRowSelectionSignal) {
-        table.resetRowSelection()
-        setSelectedRowIds({}) // 🔥 reset juga local state
+// 1️⃣ Untuk passing table ke parent
+    React.useEffect(() => {
+    if (onTableRef) {
+        onTableRef(table)
     }
+    }, [table, onTableRef])
+
+    // 2️⃣ Untuk reset selection
+    React.useEffect(() => {
+        if (resetRowSelectionSignal) {
+            table.resetRowSelection()
+            setSelectedRowIds({})
+        }
     }, [resetRowSelectionSignal, table])
 
     // 2️⃣ Hanya trigger row selection saat benar-benar berubah

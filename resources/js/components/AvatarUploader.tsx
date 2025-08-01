@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, forwardRef, useImperativeHandle, useRef } from "react"
+import { useEffect, forwardRef, useImperativeHandle } from "react"
 import { AlertCircleIcon, ImageIcon, UploadIcon } from "lucide-react"
 import { useFileUpload } from "@/hooks/use-file-upload"
 import { Button } from "@/components/ui/button"
@@ -29,6 +29,7 @@ const AvatarUploader = forwardRef<AvatarUploaderHandle, AvatarUploaderProps>(
         openFileDialog,
         removeFile,
         getInputProps,
+        inputRef,
       },
     ] = useFileUpload({
       accept: "image/svg+xml,image/png,image/jpeg,image/jpg,image/gif",
@@ -36,7 +37,6 @@ const AvatarUploader = forwardRef<AvatarUploaderHandle, AvatarUploaderProps>(
       multiple: false,
     })
 
-    const inputRef = useRef<HTMLInputElement>(null)
     const inputProps = getInputProps({
       className: "sr-only",
       "aria-label": "Upload image file",

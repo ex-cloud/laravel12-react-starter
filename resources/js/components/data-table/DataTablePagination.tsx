@@ -18,7 +18,6 @@ import { getPageSizeOptions } from "@/utils/paginationHelpers"
 type DataTablePaginationProps<TData> =
   | {
       table: TableInstance<TData>
-      selectAllAcrossPages?: boolean
       totalCount?: number
     }
   | {
@@ -30,7 +29,6 @@ type DataTablePaginationProps<TData> =
       onPageSizeChange: (size: number) => void
       selectedCount: number
       totalCount?: number
-      selectAllAcrossPages?: boolean
     }
 
 export function DataTablePagination<TData>(props: DataTablePaginationProps<TData>) {
@@ -83,15 +81,9 @@ export function DataTablePagination<TData>(props: DataTablePaginationProps<TData
                         <span className="italic text-muted-foreground">No data available.</span>
                     ) : (
                         <>
-                        <span className="block lg:hidden">
-                            {props.selectAllAcrossPages
-                            ? `All ${props.totalCount ?? filteredCount} records selected across all pages`
-                            : `${selectedCount} selected`}
-                        </span>
+                        <span className="block lg:hidden">{selectedCount} selected</span>
                         <span className="hidden lg:block">
-                            {props.selectAllAcrossPages
-                            ? `All ${props.totalCount ?? filteredCount} records selected across all pages`
-                            : `${selectedCount} of ${props.totalCount ?? filteredCount} row(s) selected.`}
+                            {selectedCount} of {filteredCount} row(s) selected.
                         </span>
                         </>
                 )}
@@ -99,7 +91,7 @@ export function DataTablePagination<TData>(props: DataTablePaginationProps<TData
 
             <div className="flex items-center space-x-6 lg:space-x-8">
                 <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium">
+                    <p className="hidden lg:flex text-sm font-medium">
                         Rows per page&nbsp;
                     </p>
                     <Select
@@ -109,7 +101,7 @@ export function DataTablePagination<TData>(props: DataTablePaginationProps<TData
                         onPageSizeChange(size)
                         }}
                     >
-                        <SelectTrigger className="h-8 w-[110px] sm:w-[130px] md:w-[130px]">
+                        <SelectTrigger className="hidden lg:flex h-8 w-[110px] sm:w-[130px] md:w-[130px]">
                         <SelectValue/>
                         </SelectTrigger>
                         <SelectContent>
