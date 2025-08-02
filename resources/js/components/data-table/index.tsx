@@ -32,7 +32,7 @@ import { useTablePreferences } from "@/hooks/use-table-preferences"
 import { cn } from "@/lib/utils"
 import { getColumnWidthClass } from "@/utils/table-helpers"
 import { TableSkeletonRow } from "../TableSkeletonRow"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence } from "framer-motion"
 
 interface DataTableProps<TData extends { id: number | string }, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -316,116 +316,112 @@ const table = useReactTable({
                 )}
                 </div>
 
-            <div
-                className="relative max-h-[70vh] overflow-y-auto rounded-lg border" ref={tableContainerRef}
-            >
-                <Table className="min-w-full border-collapse table-auto">
-                    <TableHeader className="sticky top-0 z-20 bg-muted dark:bg-zinc-900 border-b">
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                            {headerGroup.headers.map((header, index) => {
-                                const isFirstColumn = index === 0; // Menentukan apakah ini kolom pertama
-
-                                return (
-                                <TableHead
-                                    key={header.id}
-                                    className={cn(
-                                    "relative group bg-muted dark:bg-zinc-900 px-2",
-                                    isFirstColumn ? "w-12" : "",
-                                    getColumnWidthClass(header.column) // Menambahkan kelas lebar kolom
-                                    )}
-                                    style={{ width: header.getSize() }}
-                                >
-                                    {!header.isPlaceholder && (
-                                    <div className="flex items-center justify-between pr-2">
-                                        {flexRender(header.column.columnDef.header, header.getContext())}
-
-                                        {header.column.getCanResize() && (
-                                        <div
-                                            onPointerDown={header.getResizeHandler()}
-                                            onDoubleClick={() => header.column.resetSize()}
-                                            className={cn(
-                                            "absolute right-0 top-0 h-full w-4 flex items-center justify-center cursor-col-resize group",
-                                            header.column.getIsResizing() && "bg-muted"
-                                            )}
-                                        >
-                                            <Tally2
-                                            aria-label="Resize column"
-                                            role="img"
-                                            className={cn(
-                                                "w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity",
-                                                header.column.getIsResizing() && "opacity-100 text-primary"
-                                            )}
+            <div className="relative rounded-lg border overflow-hidden">
+                <div  className="max-h-[70vh] overflow-y-auto">
+                    <Table className="min-w-full border-separate border-spacing-0 table-fixed">
+                        <TableHeader className="sticky top-0 z-20 bg-muted dark:bg-zinc-900 border-b backdrop-blur-sm">
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header, index) => {
+                                    const isFirstColumn = index === 0; // Menentukan apakah ini kolom pertama
+                                    return (
+                                    <TableHead
+                                        key={header.id}
+                                        className={cn(
+                                        "relative group bg-muted dark:bg-zinc-900 px-2",
+                                        isFirstColumn ? "w-12" : "",
+                                        getColumnWidthClass(header.column) // Menambahkan kelas lebar kolom
+                                        )}
+                                        style={{ width: header.getSize() }}
+                                    >
+                                        {!header.isPlaceholder && (
+                                        <div className="flex items-center justify-between pr-2">
+                                            {flexRender(header.column.columnDef.header, header.getContext())}
+                                            {header.column.getCanResize() && (
+                                            <div
+                                                onPointerDown={header.getResizeHandler()}
+                                                onDoubleClick={() => header.column.resetSize()}
+                                                className={cn(
+                                                "absolute right-0 top-0 h-full w-4 flex items-center justify-center cursor-col-resize group",
+                                                header.column.getIsResizing() && "bg-muted"
+                                                )}
                                             >
-                                            <title>Resize column</title>
-                                            </Tally2>
+                                                <Tally2
+                                                aria-label="Resize column"
+                                                role="img"
+                                                className={cn(
+                                                    "w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity",
+                                                    header.column.getIsResizing() && "opacity-100 text-primary"
+                                                )}
+                                                >
+                                                <title>Resize column</title>
+                                                </Tally2>
+                                            </div>
+                                            )}
                                         </div>
                                         )}
-                                    </div>
-                                    )}
-                                </TableHead>
-                                );
-                            })}
-                            </TableRow>
-                        ))}
-                        </TableHeader>
-
-
-                    <AnimatePresence mode="popLayout">
-                        <TableBody>
-                        {/* Loading awal */}
-                        {customToolbar?.isLoading ? (
-                            Array.from({ length: 10 }).map((_, i) => (
-                            <TableSkeletonRow key={i} columnCount={columnCount} />
-                            ))
-                        ) : table.getRowModel().rows.length ? (
-                            table.getRowModel().rows.map((row) => (
-                            <motion.tr className="border-b border-border  min-h-[48px]"
-                                key={row.id}
-                                data-state={row.getIsSelected() ? "selected" : undefined}
-                            >
-                                {row.getVisibleCells().map((cell, index) => {
-                                const isFirstColumn = index === 0
-                                return (
-                                    <TableCell
-                                    key={cell.id}
-                                    style={{ width: cell.column.getSize() }}
-                                    className={cn(
-                                        isFirstColumn ? "w-12 flex items-center gap-2" : "",
-                                        getColumnWidthClass(cell.column),
-                                        "py-3 text-sm leading-relaxed"
-                                    )}
-                                    >
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </TableCell>
-                                )
+                                    </TableHead>
+                                    );
                                 })}
-                            </motion.tr>
-                            ))
-                        ) : (
-                            <TableRow>
-                            <TableCell colSpan={columnCount} className="h-24 text-center">
-                                Tidak ada data.
-                            </TableCell>
-                            </TableRow>
-                        )}
-                        </TableBody>
-                    </AnimatePresence>
-
-                </Table>
-                    {!pagination && visibleRows < data.length && isFetchingMore && (
-                        <tfoot>
-                            <tr>
-                            <td colSpan={columnCount} className="py-4 text-center">
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin text-muted-foreground inline-block" />
-                                <span className="text-sm text-muted-foreground">Memuat data tambahan...</span>
-                            </td>
-                            </tr>
-                            {Array.from({ length: 3 }).map((_, i) => (
-                            <TableSkeletonRow key={`fetch-${i}`} columnCount={columnCount} />
+                                </TableRow>
                             ))}
-                        </tfoot>
-                    )}
+                            </TableHeader>
+                        <AnimatePresence mode="popLayout">
+                            <TableBody>
+                            {/* Loading awal */}
+                            {customToolbar?.isLoading ? (
+                                Array.from({ length: 10 }).map((_, i) => (
+                                <TableSkeletonRow key={i} columnCount={columnCount} />
+                                ))
+                            ) : table.getRowModel().rows.length ? (
+                                table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    className="border-b border-border min-h-[48px]"
+                                    key={row.id}
+                                    data-state={row.getIsSelected() ? "selected" : undefined}
+                                >
+                                    {row.getVisibleCells().map((cell, index) => {
+                                    const isFirstColumn = index === 0
+                                    return (
+                                        <TableCell
+                                        key={cell.id}
+                                        style={{ width: cell.column.getSize() }}
+                                        className={cn(
+                                            isFirstColumn ? "w-12 flex items-center gap-2" : "",
+                                            getColumnWidthClass(cell.column),
+                                            "py-3 text-sm leading-relaxed"
+                                        )}
+                                        >
+                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
+                                    )
+                                    })}
+                                </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                <TableCell colSpan={columnCount} className="h-24 text-center">
+                                    Tidak ada data.
+                                </TableCell>
+                                </TableRow>
+                            )}
+                            </TableBody>
+                        </AnimatePresence>
+                        {!pagination && visibleRows < data.length && isFetchingMore && (
+                            <tfoot>
+                                <tr>
+                                <td colSpan={columnCount} className="py-4 text-center">
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin text-muted-foreground inline-block" />
+                                    <span className="text-sm text-muted-foreground">Memuat data tambahan...</span>
+                                </td>
+                                </tr>
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                <TableSkeletonRow key={`fetch-${i}`} columnCount={columnCount} />
+                                ))}
+                            </tfoot>
+                        )}
+                    </Table>
+                </div>
 
             </div>
 

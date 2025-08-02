@@ -34,18 +34,20 @@ export const userColumns = (search: string = ""): ColumnDef<User>[] => [
   {
     accessorKey: "avatar",
     header: "Avatar",
-    size: 20, // Mengurangi ukuran kolom avatar
-    minSize: 20, // Ukuran minimal avatar
-    // maxSize: 100,
+    size: 60, // Mengurangi ukuran kolom avatar
+    minSize: 60, // Ukuran minimal avatar
+    maxSize: 100,
     enableResizing: false,
-    meta: { width: "min-w-[20px]" },
+    meta: { width: "min-w-[60px]" },
     cell: ({ row }) => {
-    const avatarUrl = safe(row.original.avatar) || "/assets/default.jpg"
+    const avatarUrl = row.original.avatar && row.original.avatar.length > 5
+        ? row.original.avatar
+        : "/assets/default.jpg"
       return (
         <img
           src={avatarUrl}
           alt="User Avatar"
-          className="w-8 h-8 rounded-full object-cover"
+          className="w-10 h-10 rounded-full object-cover"
           onError={(e) => {
             e.currentTarget.src = "/assets/default.jpg"
           }}

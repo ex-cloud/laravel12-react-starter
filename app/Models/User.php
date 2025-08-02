@@ -51,10 +51,9 @@ final class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
     // Di User model
-    public function getAvatarAttribute($value): string|null
+    public function getAvatarAttribute(): ?string
     {
-        return $value
-            ? Storage::url($value)
-            : null;
+        $raw = $this->getAttributes()['avatar'] ?? null;
+        return $raw ? Storage::url($raw) : null;
     }
 }
