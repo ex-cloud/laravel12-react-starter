@@ -11,7 +11,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { Check, Loader2, RotateCcw, Search, Settings2, Trash, FileDown, Plus, X } from "lucide-react"
+import { Check, Loader2, RotateCcw, Search, Trash, FileDown, Plus, X, Columns2, ChevronDown } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { useTable } from "./TableContext"
 import { useTablePreferences } from "@/hooks/use-table-preferences"
@@ -183,8 +183,9 @@ export function DataTableToolbar<TData extends { id: number | string }>({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="h-8 text-xs">
-                            <Settings2 className="h-4 w-4" />
-                            View
+                            <Columns2 className="h-4 w-4" />
+                                Customize Columns
+                            <ChevronDown className="h-4 w-4" />
                         </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="min-w-[200px] px-2 py-2">

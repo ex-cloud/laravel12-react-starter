@@ -169,7 +169,7 @@ export default function TagIndex({ tags }: TagProps) {
 
     return (
     <AppLayout breadcrumbs={breadcrumbs}>
-        <Head title="Manajemen Tag" />
+        <Head title="Tags Manajemen" />
 
         <div className="mx-auto py-10 w-full px-8">
             {isLoading && (

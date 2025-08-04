@@ -11,26 +11,31 @@ const safe = (text?: string | null): string => text ?? ""
 
 export const userColumns = (search: string = ""): ColumnDef<User>[] => [
   {
-    id: "select",
-    size: 20,
-    minSize: 20,
-    enableResizing: false,
-    meta: { width: "min-w-[20px]" },
-    header: ({ table }) => (
+  id: "select",
+  size: 26,
+  minSize: 26,
+  maxSize: 60,
+  enableResizing: false,
+  meta: { width: "min-w-[26px]" },
+  header: ({ table }) => (
+    <div className="flex items-center justify-center">
       <Checkbox
         checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
       />
-    ),
-    cell: ({ row }) => (
+    </div>
+  ),
+  cell: ({ row }) => (
+    <div className="flex items-center justify-center">
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
       />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+    </div>
+  ),
+  enableSorting: false,
+  enableHiding: false,
+},
   {
     accessorKey: "avatar",
     header: "Avatar",

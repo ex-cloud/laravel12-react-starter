@@ -12,21 +12,26 @@ const safe = (text?: string | null): string => text ?? ""
 export const tagColumns = (search: string = ""): ColumnDef<Tag>[] => [
     {
         id: "select",
-        size: 40,
-        minSize: 20,
+        size: 26,
+        minSize: 26,
+        maxSize: 60,
         enableResizing: false,
-        meta: { width: "min-w-[20px]" },
+        meta: { width: "min-w-[26px]" },
         header: ({ table }) => (
-        <Checkbox
-            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        />
+            <div className="flex items-center justify-center">
+            <Checkbox
+                checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            />
+            </div>
         ),
         cell: ({ row }) => (
-        <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-        />
+            <div className="flex items-center justify-center">
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+            />
+            </div>
         ),
         enableSorting: false,
         enableHiding: false,
