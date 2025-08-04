@@ -128,49 +128,49 @@ final class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // Fungsi bantu untuk normalize path avatar
+    private function normalizeAvatarPath(string $path): string
+    {
+        // Hilangkan prefix "/storage/" jika ada
+        return preg_replace('#^/storage/#', '', $path);
+    }
+
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
         $validated = $request->validated();
-        Log::info('Is multipart?', ['isMultipart' => $request->isMethod('put') && $request->has('name')]);
-        Log::info('All input:', $request->all());
-        Log::info('Validated:', $validated);
 
-
-        Log::info('Validated data:', $validated);
-
-        // Jika ada file avatar baru diupload
         if ($request->hasFile('avatar')) {
-            // Hapus avatar lama jika ada dan bukan default
             if (
                 $user->avatar &&
-                Storage::disk('public')->exists($user->avatar) &&
+                Storage::disk('public')->exists($this->normalizeAvatarPath($user->avatar)) &&
                 $user->avatar !== 'avatars/default.jpg'
             ) {
-                Storage::disk('public')->delete($user->avatar);
+                Storage::disk('public')->delete($this->normalizeAvatarPath($user->avatar));
             }
 
-            // Upload avatar baru dan simpan path-nya
             $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
         } else {
-            // ⛔️ Hapus field avatar jika hanya dikirim URL string
             unset($validated['avatar']);
         }
+
         if ($request->boolean('reset_avatar')) {
             if (
                 $user->avatar &&
-                Storage::disk('public')->exists($user->avatar) &&
+                Storage::disk('public')->exists($this->normalizeAvatarPath($user->avatar)) &&
                 $user->avatar !== 'avatars/default.jpg'
             ) {
-                Storage::disk('public')->delete($user->avatar);
+                Storage::disk('public')->delete($this->normalizeAvatarPath($user->avatar));
             }
 
             $validated['avatar'] = null;
         }
 
         $user->update($validated);
-        // dd($request->all(), $request->file('avatar'), $request->hasFile('avatar'));
-        return back(303)->with('success', 'User berhasil diperbarui.');
+
+        return back()->with('success', 'User berhasil diperbarui.');
     }
+
+
 
     /**
      * Remove the specified resource from storage.

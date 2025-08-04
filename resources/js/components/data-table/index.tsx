@@ -157,7 +157,7 @@ const tableContainerRef = React.useRef<HTMLDivElement>(null)
     // 2. Handler infinite scroll (terpisah dari efek di atas)
     React.useEffect(() => {
         const container = tableContainerRef.current
-        console.log("📦 container ref:", container)
+        // console.log("📦 container ref:", container)
     if (!container) return
 
     const handleScroll = () => {

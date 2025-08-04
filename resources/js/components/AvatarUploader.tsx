@@ -45,7 +45,7 @@ const AvatarUploader = forwardRef<AvatarUploaderHandle, AvatarUploaderProps>(
     const previewUrl = files[0]?.preview || null
 
     useEffect(() => {
-      console.log("Updated FILES:", files)
+    //   console.log("Updated FILES:", files)
       const file = files.length > 0 ? files[0]?.file : null
       if (file instanceof File) {
         onFileChange(file)
